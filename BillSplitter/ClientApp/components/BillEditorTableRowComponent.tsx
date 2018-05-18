@@ -61,7 +61,8 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                             type="number"
                             className="form-control text-right"
                             step={0.01}
-                            value={this.state.totalAmount !== undefined ? this.state.totalAmount.toFixed(2) : undefined}
+                            defaultValue={this.state.totalAmount !== undefined ? this.state.totalAmount.toFixed(2) : undefined}
+                            onBlur={(ev) => ev.target.value = (this.state.totalAmount || 0).toFixed(2)}
                             onChange={(ev) =>
                             {
                                 const value = parseFloat(ev.target.value);

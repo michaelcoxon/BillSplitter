@@ -58,7 +58,7 @@ export class PaymentsEdit extends React.Component<RouteComponentProps<{ id: numb
                         <span>Loading...</span>
                         :
                         <div>
-                            <h1>Edit - {name}</h1>
+                            <h1>Edit - {new Date(date).toDateString()}</h1>
                             {
                                 !Strings.isNullOrEmpty(this.state.submitError)
                                     ?

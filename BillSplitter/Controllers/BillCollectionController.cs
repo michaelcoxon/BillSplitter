@@ -43,7 +43,7 @@ namespace BillSplitter.Controllers
             try
             {
                 var result = await this._billService.AddBillCollectionAsync(billCollection);
-                if (result > 1)
+                if (result > 0)
                 {
                     return this.Ok();
                 }
@@ -67,7 +67,7 @@ namespace BillSplitter.Controllers
                 if (id == billCollection.BillCollectionId)
                 {
                     var result = await this._billService.UpdateBillCollectionAsync(billCollection);
-                    if (result > 1)
+                    if (result > 0)
                     {
                         return this.Ok();
                     }

@@ -57,9 +57,9 @@ export class PaymentEditorComponent extends React.Component<PaymentEditorCompone
                     <input
                         type="number"
                         className="form-control text-right"
-                        step={0.01}
-                        value={this.state.amount !== undefined ? this.state.amount.toFixed(2) : undefined}
+                        defaultValue={this.state.amount !== undefined ? this.state.amount.toFixed(2) : undefined}
                         onChange={(ev) => this.setState({ amount: parseFloat(ev.target.value) })}
+                        onBlur={(ev) => ev.target.value = this.state.amount.toFixed(2)}
                     />
                 </div>
                 <button

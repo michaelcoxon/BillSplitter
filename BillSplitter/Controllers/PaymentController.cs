@@ -37,7 +37,7 @@ namespace BillSplitter.Controllers
             try
             {
                 var result = await this._billService.AddPaymentAsync(payment);
-                if (result > 1)
+                if (result > 0)
                 {
                     return this.Ok();
                 }
@@ -61,7 +61,7 @@ namespace BillSplitter.Controllers
                 if (id == payment.PaymentId)
                 {
                     var result = await this._billService.UpdatePaymentAsync(payment);
-                    if (result > 1)
+                    if (result > 0)
                     {
                         return this.Ok();
                     }

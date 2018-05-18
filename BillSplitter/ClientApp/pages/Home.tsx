@@ -1,29 +1,149 @@
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
+import { Payment, Person, BillCollection, Split } from '../models/models';
 
-export class Home extends React.Component<RouteComponentProps<{}>, {}> {
-    public render() {
-        return <div>
-            <h1>Hello, world!</h1>
-            <p>Welcome to your new single-page application, built with:</p>
-            <ul>
-                <li><a href='https://get.asp.net/'>ASP.NET Core</a> and <a href='https://msdn.microsoft.com/en-us/library/67ef8sbd.aspx'>C#</a> for cross-platform server-side code</li>
-                <li><a href='https://facebook.github.io/react/'>React</a> and <a href='http://www.typescriptlang.org/'>TypeScript</a> for client-side code</li>
-                <li><a href='https://webpack.github.io/'>Webpack</a> for building and bundling client-side resources</li>
-                <li><a href='http://getbootstrap.com/'>Bootstrap</a> for layout and styling</li>
-            </ul>
-            <p>To help you get started, we've also set up:</p>
-            <ul>
-                <li><strong>Client-side navigation</strong>. For example, click <em>Counter</em> then <em>Back</em> to return here.</li>
-                <li><strong>Webpack dev middleware</strong>. In development mode, there's no need to run the <code>webpack</code> build tool. Your client-side resources are dynamically built on demand. Updates are available as soon as you modify any file.</li>
-                <li><strong>Hot module replacement</strong>. In development mode, you don't even need to reload the page after making most changes. Within seconds of saving changes to files, rebuilt React components will be injected directly into your running application, preserving its live state.</li>
-                <li><strong>Efficient production builds</strong>. In production mode, development-time features are disabled, and the <code>webpack</code> build tool produces minified static CSS and JavaScript files.</li>
-            </ul>
-            <h4>Going further</h4>
-            <p>
-                For larger applications, or for server-side prerendering (i.e., for <em>isomorphic</em> or <em>universal</em> applications), you should consider using a Flux/Redux-like architecture.
-                You can generate an ASP.NET Core application with React and Redux using <code>dotnet new reactredux</code> instead of using this template.
-            </p>
-        </div>;
+interface HomeState
+{
+    loading: boolean;
+    persons: Person[];
+    payments: Payment[];
+    billCollections: BillCollection[];
+}
+
+type TableRow = { receiverId: number, senderId: number, amount: number };
+
+export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
+
+    constructor(props: RouteComponentProps<{}>)
+    {
+        super(props);
+
+        this.state = {
+            loading: true,
+            persons: [],
+            payments: [],
+            billCollections: [],
+        };
+    }
+
+    public async componentWillMount()
+    {
+        const [paymentResponse, personsResponse, billCollectionResponse] = await Promise.all([fetch('api/payment'), fetch('api/person'), fetch('api/billCollection')]);
+
+        const payments = (await paymentResponse.json()) as Payment[];
+        const persons = (await personsResponse.json()) as Person[];
+        const billCollections = (await billCollectionResponse.json()) as BillCollection[];
+
+        this.setState({
+            loading: false,
+            persons: persons,
+            payments: payments,
+            billCollections: billCollections,
+        });
+    }
+
+    public render()
+    {
+        const { loading, persons, payments, billCollections } = this.state;
+        let list: TableRow[] = []
+
+        if (!loading)
+        {
+            list = this._buildList();
+        }
+
+        return (
+            <div>
+                <h1>Dashboard</h1>
+                {
+                    !loading
+                        ?
+                        <div className="panel panel-default">
+                            <div className="panel-heading">
+                                <h4>Outstanding funds</h4>
+                            </div>
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Receiver</th>
+                                        <th>Sender</th>
+                                        <th className="td-shrink">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {
+                                        list.length > 0
+                                            ?
+                                            list.map(i =>
+                                            {
+                                                <tr>
+                                                    <td>{persons.find(p => p.personId == i.receiverId)!.name}</td>
+                                                    <td>{persons.find(p => p.personId == i.senderId)!.name}</td>
+                                                    <td className="text-right">${i.amount.toFixed(2)}</td>
+                                                </tr>
+                                            })
+                                            :
+                                            <tr>
+                                                <td colSpan={3}>No items</td>
+                                            </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        :
+                        <p>Loading...</p>
+                }
+            </div>
+        );
+    }
+
+    private _buildList(): TableRow[]
+    {
+        // { payeeId: number, payerId: number, amount: number }
+        let result: TableRow[] = [];
+
+        for (var receiver of this.state.persons)
+        {
+            var receivedTotal: number = this.state.payments
+                .filter(p => p.receiverPersonId == receiver.personId)
+                .reduce((p, c) => p + c.amount, 0);
+
+            var owedTotal: number = this.state.billCollections
+                .filter(bc => bc.bills.some(b => b.personId == receiver.personId))
+                .reduce((p, c) => c.bills.reduce((p, b) =>
+                {
+                    let recieverSplit: Split | undefined;
+
+                    if (b.splits !== undefined && (recieverSplit = b.splits.find(s => s.personId == receiver.personId)) !== undefined)
+                    {
+                        return p + 1;
+                    }
+                    else
+                    {
+                        return p + 0;
+                    }
+                }, 0), 0);
+
+            var actualOwed = owedTotal - receivedTotal;
+
+            if (actualOwed > 0)
+            {
+                result.push({
+                    receiverId: receiver.personId,
+                    senderId: receiver.personId,
+                    amount: actualOwed
+                });
+            }
+            else if (actualOwed < 0)
+            {
+                result.push({
+                    receiverId: receiver.personId,
+                    senderId: receiver.personId,
+                    amount: actualOwed
+                });
+            }
+        }
+
+        return result;
     }
 }
