@@ -1,4 +1,4 @@
-﻿import { BillCollection, Bill } from "../models/models";
+﻿import { BillCollection, Bill, Person, Split } from "../models/models";
 
 
 
@@ -18,7 +18,7 @@ export namespace BillHelpers
         return bills.reduce((p, c) => p + (c.totalAmount || 0), 0);
     }
 
-    export function getSplitAmount(total: number, bills: Bill[])
+    export function getSplitAmount(total: number, bills: Bill[]): number
     {
         let amount = 0;
 
@@ -39,4 +39,33 @@ export namespace BillHelpers
 
         return amount;
     }
+
+    export function getSplitLabelForSplit(persons: Person[], split: Split): string
+    {
+        return `${persons.find(p => p.personId == split.personId)!.name} ${getSplitLabel(split)}`;
+    }
+
+    export function getSplitLabel(split: Split): string | undefined
+    {
+        let splitLabel: string | undefined;
+
+        if (split.splitAmount !== undefined && split.splitAmount !== null)
+        {
+            splitLabel = `$${split.splitAmount.toFixed(2)}`;
+        }
+        else if (split.splitPercent !== undefined && split.splitPercent !== null)
+        {
+            splitLabel = `${split.splitPercent.toFixed(2)}%`;
+        }
+
+        if (splitLabel !== null)
+        {
+            return `(${splitLabel})`;
+        }
+        else
+        {
+            return undefined;
+        }
+    }
+
 }

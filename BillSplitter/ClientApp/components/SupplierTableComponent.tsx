@@ -21,7 +21,7 @@ export class SupplierTableComponent extends React.Component<SupplierEditorCompon
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Actions</th>
+                            <th className="td-shrink">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

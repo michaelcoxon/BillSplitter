@@ -26,9 +26,9 @@ namespace BillSplitter.Controllers
         }
 
         [HttpGet("")]
-        public Task<IEnumerable<BillCollection>> GetAllAsync()
+        public async Task<IEnumerable<BillCollection>> GetAllAsync()
         {
-            return this._billService.GetBillCollectionsAsync();
+            return await this._billService.GetBillCollectionsAsync(c => c.OrderByDescending(bc => bc.Date));
         }
 
         [HttpGet("{id}")]

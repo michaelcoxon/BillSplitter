@@ -33,6 +33,12 @@
     <None Update="ClientApp\pages\BillCollections.Edit.tsx">
       <DependentUpon>BillCollections.tsx</DependentUpon>
     </None>
+    <None Update="ClientApp\pages\Payments.Create.tsx">
+      <DependentUpon>Payments.tsx</DependentUpon>
+    </None>
+    <None Update="ClientApp\pages\Payments.Edit.tsx">
+      <DependentUpon>Payments.tsx</DependentUpon>
+    </None>
     <None Update="ClientApp\pages\Persons.Create.tsx">
       <DependentUpon>Persons.tsx</DependentUpon>
     </None>

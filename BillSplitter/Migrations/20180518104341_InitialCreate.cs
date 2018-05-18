@@ -48,6 +48,34 @@ namespace BillSplitter.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Payments",
+                columns: table => new
+                {
+                    PaymentId = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Amount = table.Column<double>(nullable: false),
+                    Date = table.Column<DateTime>(nullable: false),
+                    ReceiverPersonId = table.Column<int>(nullable: false),
+                    SenderPersonId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Payments", x => x.PaymentId);
+                    table.ForeignKey(
+                        name: "FK_Payments_Persons_ReceiverPersonId",
+                        column: x => x.ReceiverPersonId,
+                        principalTable: "Persons",
+                        principalColumn: "PersonId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Payments_Persons_SenderPersonId",
+                        column: x => x.SenderPersonId,
+                        principalTable: "Persons",
+                        principalColumn: "PersonId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Bills",
                 columns: table => new
                 {
@@ -119,6 +147,16 @@ namespace BillSplitter.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Payments_ReceiverPersonId",
+                table: "Payments",
+                column: "ReceiverPersonId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Payments_SenderPersonId",
+                table: "Payments",
+                column: "SenderPersonId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Splits_PersonId",
                 table: "Splits",
                 column: "PersonId");
@@ -126,6 +164,9 @@ namespace BillSplitter.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Payments");
+
             migrationBuilder.DropTable(
                 name: "Splits");
 

@@ -1,7 +1,6 @@
 ﻿using BillSplitter.Models;
 using BillSplitter.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,34 +10,34 @@ using System.Threading.Tasks;
 namespace BillSplitter.Controllers
 {
     [Route("api/[controller]")]
-    public class PersonController : Controller
+    public class PaymentController : Controller
     {
         private readonly IBillService _billService;
 
-        public PersonController(IBillService billService)
+        public PaymentController(IBillService billService)
         {
             this._billService = billService;
         }
 
         [HttpGet("")]
-        public Task<IEnumerable<Person>> GetAllAsync()
+        public async Task<IEnumerable<Payment>> GetAllAsync()
         {
-            return this._billService.GetPersonsAsync();
+            return await this._billService.GetPaymentsAsync(c => c.OrderByDescending(p => p.Date));
         }
 
         [HttpGet("{id}")]
-        public Task<Person> GetSingleAsync(int id)
+        public Task<Payment> GetSingleAsync(int id)
         {
-            return this._billService.GetPersonAsync(id);
+            return this._billService.GetPaymentAsync(id);
         }
 
         [HttpPost("")]
-        public async Task<ActionResult> SaveAsync([FromBody] Person person)
+        public async Task<ActionResult> SaveAsync([FromBody] Payment payment)
         {
             try
             {
-                var result = await this._billService.AddPersonAsync(person);
-                if (result == 1)
+                var result = await this._billService.AddPaymentAsync(payment);
+                if (result > 1)
                 {
                     return this.Ok();
                 }
@@ -54,14 +53,15 @@ namespace BillSplitter.Controllers
         }
 
         [HttpPost("{id}")]
-        public async Task<ActionResult> SaveAsync(int id, [FromBody] Person person)
+        public async Task<ActionResult> SaveAsync(int id, [FromBody] Payment payment)
         {
             try
             {
-                if (id == person.PersonId)
+
+                if (id == payment.PaymentId)
                 {
-                    var result = await this._billService.UpdatePersonAsync(person);
-                    if (result == 1)
+                    var result = await this._billService.UpdatePaymentAsync(payment);
+                    if (result > 1)
                     {
                         return this.Ok();
                     }

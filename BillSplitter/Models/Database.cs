@@ -19,7 +19,8 @@ namespace BillSplitter.Models
         public DbSet<BillCollection> BillCollections { get; set; }
         public DbSet<Split> Splits { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
-
+        public DbSet<Payment> Payments { get; set; }
+        
         public BillSplitterContext(DbContextOptions<BillSplitterContext> options)
             : base(options)
         { }
@@ -35,7 +36,7 @@ namespace BillSplitter.Models
             */
             modelBuilder.Entity<Bill>(builder => builder.HasIndex(b => new { b.BillId, b.BillCollectionId }).IsUnique());
             modelBuilder.Entity<Split>(builder => builder.HasKey(s => new { s.BillId, s.BillCollectionId, s.PersonId }));
-
+            modelBuilder.Entity<Person>(builder => builder.HasMany(p => p.Payments).WithOne(pay => pay.SenderPerson));
 
             base.OnModelCreating(modelBuilder);
         }
@@ -59,6 +60,7 @@ namespace BillSplitter.Models
         public string Name { get; set; }
 
         public List<Split> Splits { get; set; }
+        public List<Payment> Payments { get; set; }
     }
 
     public class BillCollection
@@ -100,5 +102,18 @@ namespace BillSplitter.Models
 
         public List<Bill> Bills { get; set; }
 
+    }
+
+    public class Payment
+    {
+        public int PaymentId { get; set; }
+        public DateTime Date { get; set; }
+        public double Amount { get; set; }
+
+        public int SenderPersonId { get; set; }
+        public Person SenderPerson { get; set; }
+
+        public int ReceiverPersonId { get; set; }
+        public Person ReceiverPerson { get; set; }
     }
 }

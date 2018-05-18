@@ -24,7 +24,11 @@
 }
 
 a {
-  cursor:pointer;
+  cursor: pointer;
+}
+
+.nav-divider {
+  opacity: 0.2;
 }
 
 @media (max-width: 767px) {

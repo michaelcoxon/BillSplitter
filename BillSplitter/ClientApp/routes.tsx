@@ -11,6 +11,9 @@ import { Persons } from './pages/Persons';
 import { BillCollections } from './pages/BillCollections';
 import { BillCollectionsCreate } from './pages/BillCollections.Create';
 import { BillCollectionsEdit } from './pages/BillCollections.Edit';
+import { Payments } from './pages/Payments';
+import { PaymentsCreate } from './pages/Payments.Create';
+import { PaymentsEdit } from './pages/Payments.Edit';
 
 export const routes = <Layout>
     <Route exact path='/' component={Home} />
@@ -27,4 +30,8 @@ export const routes = <Layout>
     <Route exact path='/billcollections/create' component={BillCollectionsCreate} />
     <Route exact path='/billcollections/edit/:id' component={BillCollectionsEdit} />
 
+    <Route exact path='/payments' component={Payments} />
+    <Route exact path='/payments/create' component={PaymentsCreate} />
+    <Route exact path='/payments/edit/:id' component={PaymentsEdit} />
+    
 </Layout>;

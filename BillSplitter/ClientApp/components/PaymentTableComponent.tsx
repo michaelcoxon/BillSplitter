@@ -1,43 +1,50 @@
 ﻿import * as React from "react";
 
-import { Person } from "../models/models";
+import { Payment, Person } from "../models/models";
 
-interface PersonEditorComponentProps
+interface PaymentEditorComponentProps
 {
     persons: Person[];
+    payments: Payment[];
 
-    onEdit: (personId: number) => void;
+    onEdit: (paymentId: number) => void;
 }
 
-export class PersonTableComponent extends React.Component<PersonEditorComponentProps>
+export class PaymentTableComponent extends React.Component<PaymentEditorComponentProps>
 {
     public render(): JSX.Element
     {
-        const { persons } = this.props;
+        const { payments, persons } = this.props;
 
         return (
             <div>
                 <table className="table">
                     <thead>
                         <tr>
-                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Sender</th>
+                            <th>Receiver</th>
+                            <th className="td-shrink">Amount</th>
                             <th className="td-shrink">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {
-                            persons.length > 0
+                            payments.length > 0
                                 ?
-                                persons.map(s =>
+                                payments.map(s =>
                                 {
                                     return (
-                                        <tr key={s.personId}>
-                                            <td>{s.name}</td>
+                                        <tr key={s.paymentId}>
+                                            <td>{new Date(s.date).toDateString()}</td>
+                                            <td>{persons.find(p => p.personId == s.senderPersonId)!.name}</td>
+                                            <td>{persons.find(p => p.personId == s.receiverPersonId)!.name}</td>
+                                            <td className="text-right">${s.amount.toFixed(2)}</td>
                                             <td>
                                                 <button
                                                     type="button"
                                                     className="btn btn-link btn-sm"
-                                                    onClick={() => this._editPerson(s.personId)}
+                                                    onClick={() => this._editPayment(s.paymentId)}
                                                 >
                                                     Edit...
                                             </button>
@@ -47,7 +54,7 @@ export class PersonTableComponent extends React.Component<PersonEditorComponentP
                                 })
                                 :
                                 <tr>
-                                    <td colSpan={2}>No people</td>
+                                    <td colSpan={2}>No payments</td>
                                 </tr>
                         }
                     </tbody>
@@ -56,8 +63,8 @@ export class PersonTableComponent extends React.Component<PersonEditorComponentP
         );
     }
 
-    private _editPerson(personId: number): void
+    private _editPayment(paymentId: number): void
     {
-        this.props.onEdit(personId);
+        this.props.onEdit(paymentId);
     }
 }

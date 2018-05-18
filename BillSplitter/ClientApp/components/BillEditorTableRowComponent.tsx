@@ -1,6 +1,7 @@
 ﻿import * as React from 'react';
 import { Supplier, Person, Bill, Split } from "../models/models";
 import { NotSupportedException } from '@michaelcoxon/utilities';
+import { BillHelpers } from '../helpers/ModelHelpers';
 
 
 interface BillEditorTableRowComponentProps
@@ -129,19 +130,7 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
             ?
             "None selected"
             :
-            this.state.splits.map(s =>
-            {
-                const person = persons.find(p => p.personId == s.personId)!
-                const name = person.name;
-                const split = s.splitAmount !== undefined && s.splitAmount !== null
-                    ? `($${s.splitAmount.toFixed(2)})`
-                    : s.splitPercent !== undefined && s.splitPercent !== null
-                        ? `(${s.splitPercent.toFixed(2)}%)`
-                        : null;
-
-                return `${name} ${split}`;
-            })
-                .join(", ");
+            this.state.splits.map(s => BillHelpers.getSplitLabelForSplit(persons, s)).join(", ");
 
         return (
             <div className="dropdown keep-open">

@@ -96,7 +96,8 @@ export class BillCollectionsCreate extends React.Component<RouteComponentProps<{
             if (response.body !== null)
             {
                 this.setState({ submitError: await response.text() });
-            } else
+            }
+            else
             {
                 this.setState({ submitError: response.statusText });
             }

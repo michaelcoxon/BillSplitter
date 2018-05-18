@@ -59,33 +59,22 @@ namespace BillSplitter.Services
                 .SingleOrDefaultAsync(bc => bc.BillCollectionId == id);
         }
 
-        public async Task<IEnumerable<BillCollection>> GetBillCollectionsAsync()
+        public async Task<IEnumerable<BillCollection>> GetBillCollectionsAsync(Func<IQueryable<BillCollection>, IQueryable<BillCollection>> query = null)
         {
             var context = this._billSplitterContext;
-            return await context.BillCollections
-                .Include(bc => bc.Bills).ThenInclude(b => b.Splits)
+            return await query(context.BillCollections
+                .Include(bc => bc.Bills).ThenInclude(b => b.Splits))
                 .ToListAsync();
         }
 
         public async Task<int> UpdateBillCollectionAsync(BillCollection billCollection)
         {
             var context = this._billSplitterContext;
-            /*
-            var bills = billCollection.Bills.Select(bill => new Bill
-            {
-                BillId = bill.BillId,
-                PersonId = bill.PersonId,
-                SupplierId = bill.SupplierId,
-                TotalAmount = bill.TotalAmount,
 
-                Splits = new List<Split>(bill.Splits.Select(split => new Split
-                {
-                    PersonId = split.PersonId,
-                }))
-            }).ToList();
-            */
             var actualBillCollection = await this.GetBillCollectionAsync(billCollection.BillCollectionId);
+
             actualBillCollection.Date = billCollection.Date.Date;
+
             actualBillCollection.Bills.Update(
                 billCollection.Bills,
                 b => new { b.BillCollectionId, b.BillId },
@@ -107,7 +96,6 @@ namespace BillSplitter.Services
                             dest1.SplitPercent = src1.SplitPercent;
                         });
                 });
-
 
             context.BillCollections.Update(actualBillCollection);
             return await context.SaveChangesAsync();
@@ -165,6 +153,31 @@ namespace BillSplitter.Services
             return await context.SaveChangesAsync();
         }
 
+        public async Task<Payment> GetPaymentAsync(int id)
+        {
+            var context = this._billSplitterContext;
+            return await context.Payments.FindAsync(id);
+        }
+
+        public async Task<IEnumerable<Payment>> GetPaymentsAsync(Func<IQueryable<Payment>, IQueryable<Payment>> query = null)
+        {
+            var context = this._billSplitterContext;
+            return await query(context.Payments).ToListAsync();
+        }
+
+        public async Task<int> UpdatePaymentAsync(Payment payment)
+        {
+            var context = this._billSplitterContext;
+            context.Payments.Update(payment);
+            return await context.SaveChangesAsync();
+        }
+
+        public async Task<int> AddPaymentAsync(Payment payment)
+        {
+            var context = this._billSplitterContext;
+            await context.Payments.AddAsync(payment);
+            return await context.SaveChangesAsync();
+        }
         public void Dispose()
         {
             this._billSplitterContext.Dispose();

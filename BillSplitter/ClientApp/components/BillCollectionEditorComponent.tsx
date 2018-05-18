@@ -3,6 +3,7 @@ import { BillCollection, Supplier, Person, Bill } from "../models/models";
 import { BillEditorTableRowComponent } from './BillEditorTableRowComponent';
 import { Guid } from '@michaelcoxon/utilities';
 import { BillCollectionHelpers, BillHelpers } from '../helpers/ModelHelpers';
+import { getISODate } from '../utilities';
 
 interface BillCollectionEditorComponentProps
 {
@@ -57,7 +58,7 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                         className="form-control"
                         id="date"
                         placeholder="Date"
-                        value={this._getISODate(new Date(billCollection.date))}
+                        value={getISODate(new Date(billCollection.date))}
                         onChange={(ev) => this.setState({ date: new Date(ev.target.value).toJSON() })}
                     />
                 </div>
@@ -170,20 +171,5 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
         }
 
         this.props.onSave(billCollection);
-    }
-
-    private _getISODate(date: Date)
-    {
-        return `${this._leftPad('0', date.getFullYear(), 4)}-${this._leftPad('0', date.getMonth() + 1, 2)}-${this._leftPad('0', date.getDate(), 2)}`;
-    }
-
-    private _leftPad(str: string, value: number, length: number)
-    {
-        let strValue = value.toString();
-        while (strValue.length < length)
-        {
-            strValue = str + strValue;
-        }
-        return strValue;
     }
 }

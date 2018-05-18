@@ -56,6 +56,28 @@ namespace BillSplitter.Migrations
                     b.ToTable("BillCollections");
                 });
 
+            modelBuilder.Entity("BillSplitter.Models.Payment", b =>
+                {
+                    b.Property<int>("PaymentId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<double>("Amount");
+
+                    b.Property<DateTime>("Date");
+
+                    b.Property<int>("ReceiverPersonId");
+
+                    b.Property<int>("SenderPersonId");
+
+                    b.HasKey("PaymentId");
+
+                    b.HasIndex("ReceiverPersonId");
+
+                    b.HasIndex("SenderPersonId");
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("BillSplitter.Models.Person", b =>
                 {
                     b.Property<int>("PersonId")
@@ -109,6 +131,19 @@ namespace BillSplitter.Migrations
                     b.HasOne("BillSplitter.Models.Supplier")
                         .WithMany("Bills")
                         .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BillSplitter.Models.Payment", b =>
+                {
+                    b.HasOne("BillSplitter.Models.Person", "ReceiverPerson")
+                        .WithMany()
+                        .HasForeignKey("ReceiverPersonId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("BillSplitter.Models.Person", "SenderPerson")
+                        .WithMany("Payments")
+                        .HasForeignKey("SenderPersonId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

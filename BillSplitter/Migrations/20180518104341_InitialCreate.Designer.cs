@@ -11,7 +11,7 @@ using System;
 namespace BillSplitter.Migrations
 {
     [DbContext(typeof(BillSplitterContext))]
-    [Migration("20180517134056_InitialCreate")]
+    [Migration("20180518104341_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -55,6 +55,28 @@ namespace BillSplitter.Migrations
                     b.HasKey("BillCollectionId");
 
                     b.ToTable("BillCollections");
+                });
+
+            modelBuilder.Entity("BillSplitter.Models.Payment", b =>
+                {
+                    b.Property<int>("PaymentId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<double>("Amount");
+
+                    b.Property<DateTime>("Date");
+
+                    b.Property<int>("ReceiverPersonId");
+
+                    b.Property<int>("SenderPersonId");
+
+                    b.HasKey("PaymentId");
+
+                    b.HasIndex("ReceiverPersonId");
+
+                    b.HasIndex("SenderPersonId");
+
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("BillSplitter.Models.Person", b =>
@@ -110,6 +132,19 @@ namespace BillSplitter.Migrations
                     b.HasOne("BillSplitter.Models.Supplier")
                         .WithMany("Bills")
                         .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BillSplitter.Models.Payment", b =>
+                {
+                    b.HasOne("BillSplitter.Models.Person", "ReceiverPerson")
+                        .WithMany()
+                        .HasForeignKey("ReceiverPersonId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("BillSplitter.Models.Person", "SenderPerson")
+                        .WithMany("Payments")
+                        .HasForeignKey("SenderPersonId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

@@ -39,3 +39,12 @@ export interface Supplier
     supplierId: number;
     name?: string;
 }
+
+export interface Payment
+{
+    paymentId: number;
+    date: string;
+    amount: number;
+    senderPersonId?: number;
+    receiverPersonId?: number;
+}
