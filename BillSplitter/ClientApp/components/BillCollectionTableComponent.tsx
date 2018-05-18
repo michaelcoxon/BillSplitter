@@ -1,6 +1,7 @@
 ﻿import * as React from "react";
 
 import { BillCollection } from "../models/models";
+import { BillCollectionHelpers } from "../helpers/ModelHelpers";
 
 interface BillCollectionEditorComponentProps
 {
@@ -51,6 +52,13 @@ export class BillCollectionTableComponent extends React.Component<BillCollection
                                 </tr>
                         }
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total</th>
+                            <th className="text-right">${BillCollectionHelpers.computeTotal(...billCollections).toFixed(2)}</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         );

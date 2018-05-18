@@ -2,6 +2,7 @@
 import { BillCollection, Supplier, Person, Bill } from "../models/models";
 import { BillEditorTableRowComponent } from './BillEditorTableRowComponent';
 import { Guid } from '@michaelcoxon/utilities';
+import { BillCollectionHelpers, BillHelpers } from '../helpers/ModelHelpers';
 
 interface BillCollectionEditorComponentProps
 {
@@ -111,9 +112,26 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                             <tr>
                                 <td>Total</td>
                                 <th>&nbsp;</th>
-                                <td className="text-right">{`$${billCollection.bills.reduce<number>((p, c) => p + (c.item.totalAmount || 0), 0).toFixed(2)}`}</td>
+                                <td className="text-right">{`$${BillHelpers.computeTotal(...billCollection.bills.map(ib=>ib.item)).toFixed(2)}`}</td>
                                 <td>&nbsp;</td>
-                                <td>&nbsp;</td>
+                                <td className="text-right">
+                                    {(() =>
+                                    {
+                                        const total = BillHelpers.computeTotal(...billCollection.bills.map(ib => ib.item));
+                                        let splitAmount = BillHelpers.getSplitAmount(total, billCollection.bills.map(ib => ib.item));
+
+
+                                        return total - splitAmount == 0
+                                            ?
+                                            <span className="text-success">{`$${splitAmount.toFixed(2)}`}</span>
+                                            :
+                                            <span>
+                                                <span className="text-danger">{`$${splitAmount.toFixed(2)}`}</span>
+                                                &nbsp;
+                                                <small className="text-muted">({`$${(total - splitAmount).toFixed(2)}`})</small>
+                                            </span>
+                                    })()}
+                                </td>
                             </tr>
                         </tfoot>
                     </table>

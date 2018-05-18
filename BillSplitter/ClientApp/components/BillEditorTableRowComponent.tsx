@@ -61,7 +61,12 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                             className="form-control text-right"
                             step={0.01}
                             value={this.state.totalAmount !== undefined ? this.state.totalAmount.toFixed(2) : undefined}
-                            onChange={(ev) => this.props.onChange(this.props.index, { totalAmount: parseFloat(ev.target.value) })}
+                            onChange={(ev) =>
+                            {
+                                const value = parseFloat(ev.target.value);
+                                this.props.onChange(this.props.index, { totalAmount: value });
+                                this.setState({ totalAmount: value });
+                            }}
                         />
                     </div>
                 </td>
@@ -82,7 +87,12 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
         return (
             <select
                 className="form-control"
-                onChange={(ev) => this.props.onChange(this.props.index, { supplierId: parseInt(ev.target.value) })}
+                onChange={(ev) =>
+                {
+                    const value = parseInt(ev.target.value);
+                    this.props.onChange(this.props.index, { supplierId: value });
+                    this.setState({ supplierId: value });
+                }}
                 defaultValue={this.state.supplierId !== undefined ? this.state.supplierId.toString() : ""}
             >
                 <option disabled={true} value={""}>Please select</option>
@@ -98,7 +108,12 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
         return (
             <select
                 className="form-control"
-                onChange={(ev) => this.props.onChange(this.props.index, { personId: parseInt(ev.target.value) })}
+                onChange={(ev) =>
+                {
+                    const value = parseInt(ev.target.value);
+                    this.props.onChange(this.props.index, { personId: value });
+                    this.setState({ personId: value });
+                }}
                 defaultValue={this.state.personId !== undefined ? this.state.personId.toString() : ""}
             >
                 <option disabled={true} value={""}>Please select</option>
@@ -114,7 +129,19 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
             ?
             "None selected"
             :
-            this.state.splits.map(s => persons.find(p => p.personId == s.personId)!.name).join(", ");
+            this.state.splits.map(s =>
+            {
+                const person = persons.find(p => p.personId == s.personId)!
+                const name = person.name;
+                const split = s.splitAmount !== undefined && s.splitAmount !== null
+                    ? `($${s.splitAmount.toFixed(2)})`
+                    : s.splitPercent !== undefined && s.splitPercent !== null
+                        ? `(${s.splitPercent.toFixed(2)}%)`
+                        : null;
+
+                return `${name} ${split}`;
+            })
+                .join(", ");
 
         return (
             <div className="dropdown keep-open">
@@ -146,6 +173,8 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                                                 splits.push({
                                                     billId: this.state.billId,
                                                     personId: p.personId,
+                                                    splitPercent: (1 / persons.length) * 100,
+                                                    splitAmount: undefined,
                                                 })
                                             }
                                             else
@@ -154,10 +183,122 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                                             }
 
                                             this.props.onChange(this.props.index, { splits: splits });
+                                            this.setState({ splits: splits });
                                         }}
                                     />
-                                    {p.name}
+                                    <strong>{p.name}</strong>
                                 </label>
+
+                                {(() =>
+                                {
+                                    const split = this.state.splits.find(pp => pp.personId == p.personId);
+                                    if (split !== undefined)
+                                    {
+                                        return true;
+                                    }
+                                    else
+                                    {
+                                        return false;
+                                    }
+                                })()
+                                    ? (
+                                        <div>
+                                            <label className="checkbox-inline" style={{ display: "block" }} title="Split by value">
+                                                <input
+                                                    type="checkbox"
+                                                    value={p.personId}
+                                                    checked={this.state.splits.some(pp => pp.personId == p.personId && (pp.splitAmount !== undefined && pp.splitAmount !== null))}
+                                                    onChange={(ev) =>
+                                                    {
+                                                        const value = parseFloat(ev.target.value);
+                                                        const { splits } = this.state;
+
+                                                        const split = this.state.splits.find(pp => pp.personId == p.personId);
+
+                                                        if (split !== undefined)
+                                                        {
+                                                            if (ev.target.checked)
+                                                            {
+                                                                split.splitAmount = 0;
+                                                                split.splitPercent = undefined;
+                                                            }
+                                                            else
+                                                            {
+                                                                split.splitAmount = undefined;
+                                                                split.splitPercent = (1 / persons.length) * 100;
+                                                            }
+                                                        }
+
+                                                        this.props.onChange(this.props.index, { splits: splits });
+                                                        this.setState({ splits: splits });
+                                                    }}
+                                                />
+                                                Split by value
+                                        </label>
+                                            {(() =>
+                                            {
+                                                const split = this.state.splits.find(pp => pp.personId == p.personId && (pp.splitAmount !== undefined && pp.splitAmount !== null));
+                                                if (split !== undefined)
+                                                {
+                                                    return true;
+                                                }
+                                                else
+                                                {
+                                                    return false;
+                                                }
+                                            })()
+                                                ?
+                                                <input
+                                                    type="number"
+                                                    className="form-control text-right"
+                                                    step={0.01}
+                                                    value={
+                                                        (() =>
+                                                        {
+                                                            const split = this.state.splits.find(pp => pp.personId == p.personId);
+                                                            if (split !== undefined)
+                                                            {
+                                                                return (split.splitAmount || 0).toFixed(2);
+                                                            }
+                                                            else
+                                                            {
+                                                                return (0).toFixed(2);
+                                                            }
+                                                        })()
+                                                    }
+                                                    onChange={(ev) =>
+                                                    {
+                                                        const value = parseFloat(ev.target.value);
+                                                        const { splits } = this.state;
+
+                                                        const split = this.state.splits.find(pp => pp.personId == p.personId);
+
+                                                        if (split !== undefined)
+                                                        {
+                                                            split.splitAmount = value;
+                                                            split.splitPercent = undefined;
+                                                        }
+                                                        else
+                                                        {
+                                                            splits.push({
+                                                                billId: this.state.billId,
+                                                                personId: p.personId,
+                                                                splitAmount: value,
+                                                                splitPercent: undefined,
+                                                            })
+                                                        }
+
+                                                        this.props.onChange(this.props.index, { splits: splits });
+                                                        this.setState({ splits: splits });
+                                                    }}
+                                                />
+                                                :
+                                                null
+                                            }
+                                        </div>)
+                                    :
+                                    null
+                                }
                             </a>
                         </li>
                     ))}
