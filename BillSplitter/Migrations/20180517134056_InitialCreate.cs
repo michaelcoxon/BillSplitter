@@ -14,7 +14,7 @@ namespace BillSplitter.Migrations
                 {
                     BillCollectionId = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Date = table.Column<DateTimeOffset>(nullable: false)
+                    Date = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -53,9 +53,9 @@ namespace BillSplitter.Migrations
                 {
                     BillId = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    BillCollectionId = table.Column<int>(nullable: true),
-                    PaidByPersonId = table.Column<int>(nullable: true),
-                    SupplierId = table.Column<int>(nullable: true),
+                    BillCollectionId = table.Column<int>(nullable: false),
+                    PersonId = table.Column<int>(nullable: false),
+                    SupplierId = table.Column<int>(nullable: false),
                     TotalAmount = table.Column<double>(nullable: false)
                 },
                 constraints: table =>
@@ -66,19 +66,13 @@ namespace BillSplitter.Migrations
                         column: x => x.BillCollectionId,
                         principalTable: "BillCollections",
                         principalColumn: "BillCollectionId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Bills_Persons_PaidByPersonId",
-                        column: x => x.PaidByPersonId,
-                        principalTable: "Persons",
-                        principalColumn: "PersonId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Bills_Suppliers_SupplierId",
                         column: x => x.SupplierId,
                         principalTable: "Suppliers",
                         principalColumn: "SupplierId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -86,13 +80,14 @@ namespace BillSplitter.Migrations
                 columns: table => new
                 {
                     BillId = table.Column<int>(nullable: false),
+                    BillCollectionId = table.Column<int>(nullable: false),
                     PersonId = table.Column<int>(nullable: false),
                     SplitAmount = table.Column<double>(nullable: true),
                     SplitPercent = table.Column<double>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Splits", x => new { x.BillId, x.PersonId });
+                    table.PrimaryKey("PK_Splits", x => new { x.BillId, x.BillCollectionId, x.PersonId });
                     table.ForeignKey(
                         name: "FK_Splits_Bills_BillId",
                         column: x => x.BillId,
@@ -113,14 +108,15 @@ namespace BillSplitter.Migrations
                 column: "BillCollectionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Bills_PaidByPersonId",
-                table: "Bills",
-                column: "PaidByPersonId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Bills_SupplierId",
                 table: "Bills",
                 column: "SupplierId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Bills_BillId_BillCollectionId",
+                table: "Bills",
+                columns: new[] { "BillId", "BillCollectionId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Splits_PersonId",
@@ -137,10 +133,10 @@ namespace BillSplitter.Migrations
                 name: "Bills");
 
             migrationBuilder.DropTable(
-                name: "BillCollections");
+                name: "Persons");
 
             migrationBuilder.DropTable(
-                name: "Persons");
+                name: "BillCollections");
 
             migrationBuilder.DropTable(
                 name: "Suppliers");

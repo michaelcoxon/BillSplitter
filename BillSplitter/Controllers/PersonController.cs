@@ -1,6 +1,7 @@
 ﻿using BillSplitter.Models;
 using BillSplitter.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,11 +13,11 @@ namespace BillSplitter.Controllers
     [Route("api/[controller]")]
     public class PersonController : Controller
     {
-        private readonly BillService _billService;
+        private readonly IBillService _billService;
 
-        public PersonController()
+        public PersonController(IBillService billService)
         {
-            this._billService = new BillService(() => new BillSplitterContext());
+            this._billService = billService;
         }
 
         [HttpGet("")]

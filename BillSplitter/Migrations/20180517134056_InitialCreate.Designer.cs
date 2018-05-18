@@ -11,7 +11,7 @@ using System;
 namespace BillSplitter.Migrations
 {
     [DbContext(typeof(BillSplitterContext))]
-    [Migration("20180509110759_InitialCreate")]
+    [Migration("20180517134056_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,11 +25,11 @@ namespace BillSplitter.Migrations
                     b.Property<int>("BillId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("BillCollectionId");
+                    b.Property<int>("BillCollectionId");
 
-                    b.Property<int?>("PaidByPersonId");
+                    b.Property<int>("PersonId");
 
-                    b.Property<int?>("SupplierId");
+                    b.Property<int>("SupplierId");
 
                     b.Property<double>("TotalAmount");
 
@@ -37,9 +37,10 @@ namespace BillSplitter.Migrations
 
                     b.HasIndex("BillCollectionId");
 
-                    b.HasIndex("PaidByPersonId");
-
                     b.HasIndex("SupplierId");
+
+                    b.HasIndex("BillId", "BillCollectionId")
+                        .IsUnique();
 
                     b.ToTable("Bills");
                 });
@@ -49,7 +50,7 @@ namespace BillSplitter.Migrations
                     b.Property<int>("BillCollectionId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<DateTimeOffset>("Date");
+                    b.Property<DateTime>("Date");
 
                     b.HasKey("BillCollectionId");
 
@@ -72,13 +73,15 @@ namespace BillSplitter.Migrations
                 {
                     b.Property<int>("BillId");
 
+                    b.Property<int>("BillCollectionId");
+
                     b.Property<int>("PersonId");
 
                     b.Property<double?>("SplitAmount");
 
                     b.Property<double?>("SplitPercent");
 
-                    b.HasKey("BillId", "PersonId");
+                    b.HasKey("BillId", "BillCollectionId", "PersonId");
 
                     b.HasIndex("PersonId");
 
@@ -101,26 +104,24 @@ namespace BillSplitter.Migrations
                 {
                     b.HasOne("BillSplitter.Models.BillCollection")
                         .WithMany("Bills")
-                        .HasForeignKey("BillCollectionId");
+                        .HasForeignKey("BillCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("BillSplitter.Models.Person", "PaidBy")
-                        .WithMany()
-                        .HasForeignKey("PaidByPersonId");
-
-                    b.HasOne("BillSplitter.Models.Supplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId");
+                    b.HasOne("BillSplitter.Models.Supplier")
+                        .WithMany("Bills")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("BillSplitter.Models.Split", b =>
                 {
-                    b.HasOne("BillSplitter.Models.Bill", "Bill")
-                        .WithMany("SplitWith")
+                    b.HasOne("BillSplitter.Models.Bill")
+                        .WithMany("Splits")
                         .HasForeignKey("BillId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("BillSplitter.Models.Person", "Person")
-                        .WithMany()
+                    b.HasOne("BillSplitter.Models.Person")
+                        .WithMany("Splits")
                         .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

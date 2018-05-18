@@ -1,4 +1,5 @@
 ﻿using BillSplitter.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,132 +8,166 @@ using System.Threading.Tasks;
 
 namespace BillSplitter.Services
 {
-    public class BillService
+    public class BillService : IDisposable, IBillService
     {
-        private readonly Func<BillSplitterContext> _billSplitterContextFactory;
+        private readonly BillSplitterContext _billSplitterContext;
 
-        public BillService(Func<BillSplitterContext> billSplitterContextFactory)
+        public BillService(BillSplitterContext billSplitterContext)
         {
-            this._billSplitterContextFactory = billSplitterContextFactory;
+            this._billSplitterContext = billSplitterContext;
         }
 
         public async Task<int> AddBillAsync(Bill bill)
         {
-            using (var context = this._billSplitterContextFactory())
-            {
-                await context.Bills.AddAsync(bill);
-                return await context.SaveChangesAsync();
-            }
+            var context = this._billSplitterContext;
+            await context.Bills.AddAsync(bill);
+            return await context.SaveChangesAsync();
         }
 
 
         public async Task<int> AddBillCollectionAsync(BillCollection billCollection)
         {
-            using (var context = this._billSplitterContextFactory())
+            var context = this._billSplitterContext;
+
+
+            var actualBillCollection = new BillCollection
             {
-                await context.BillCollections.AddAsync(billCollection);
-                return await context.SaveChangesAsync();
-            }
-        }
-        public async Task<BillCollection> GetBillCollectionAsync(int id)
-        {
-            using (var context = this._billSplitterContextFactory())
-            {
-                return await context.BillCollections.FindAsync(id);
-            }
+                Date = billCollection.Date.Date,
+                Bills = new List<Bill>(billCollection.Bills.Select(bill => new Bill
+                {
+                    PersonId = bill.PersonId,
+                    SupplierId = bill.SupplierId,
+                    TotalAmount = bill.TotalAmount,
+
+                    Splits = new List<Split>(bill.Splits.Select(split => new Split
+                    {
+                        PersonId = split.PersonId,
+                    }))
+                }))
+            };
+
+            await context.BillCollections.AddAsync(actualBillCollection);
+
+            return await context.SaveChangesAsync();
         }
 
-        public Task<IEnumerable<BillCollection>> GetBillCollectionsAsync()
+        public async Task<BillCollection> GetBillCollectionAsync(int id)
         {
-            return Task.Run<IEnumerable<BillCollection>>(() =>
-            {
-                using (var context = this._billSplitterContextFactory())
-                {
-                    return context.BillCollections.ToList();
-                }
-            });
+            var context = this._billSplitterContext;
+            return await context.BillCollections
+                .Include(bc => bc.Bills).ThenInclude(b => b.Splits)
+                .SingleOrDefaultAsync(bc => bc.BillCollectionId == id);
+        }
+
+        public async Task<IEnumerable<BillCollection>> GetBillCollectionsAsync()
+        {
+            var context = this._billSplitterContext;
+            return await context.BillCollections
+                .Include(bc => bc.Bills).ThenInclude(b => b.Splits)
+                .ToListAsync();
         }
 
         public async Task<int> UpdateBillCollectionAsync(BillCollection billCollection)
         {
-            using (var context = this._billSplitterContextFactory())
+            var context = this._billSplitterContext;
+            /*
+            var bills = billCollection.Bills.Select(bill => new Bill
             {
-                context.BillCollections.Update(billCollection);
-                return await context.SaveChangesAsync();
-            }
+                BillId = bill.BillId,
+                PersonId = bill.PersonId,
+                SupplierId = bill.SupplierId,
+                TotalAmount = bill.TotalAmount,
+
+                Splits = new List<Split>(bill.Splits.Select(split => new Split
+                {
+                    PersonId = split.PersonId,
+                }))
+            }).ToList();
+            */
+            var actualBillCollection = await this.GetBillCollectionAsync(billCollection.BillCollectionId);
+            actualBillCollection.Date = billCollection.Date.Date;
+            actualBillCollection.Bills.Update(
+                billCollection.Bills,
+                b => new { b.BillCollectionId, b.BillId },
+                b => new { b.BillCollectionId, b.BillId },
+                (b, k) => b,
+                (src, dest) =>
+                {
+                    dest.PersonId = src.PersonId;
+                    dest.SupplierId = src.SupplierId;
+                    dest.TotalAmount = src.TotalAmount;
+                    dest.Splits.Update(
+                        src.Splits,
+                        s => new { s.BillId, s.BillCollectionId, s.PersonId },
+                        s => new { s.BillId, s.BillCollectionId, s.PersonId },
+                        (s, k) => s,
+                        (src1, dest1) =>
+                        {
+                            dest1.SplitAmount = src1.SplitAmount;
+                            dest1.SplitPercent = src1.SplitPercent;
+                        });
+                });
+
+
+            context.BillCollections.Update(actualBillCollection);
+            return await context.SaveChangesAsync();
         }
 
         public async Task<int> AddSupplierAsync(Supplier supplier)
         {
-            using (var context = this._billSplitterContextFactory())
-            {
-                await context.Suppliers.AddAsync(supplier);
-                return await context.SaveChangesAsync();
-            }
+            var context = this._billSplitterContext;
+            await context.Suppliers.AddAsync(supplier);
+            return await context.SaveChangesAsync();
         }
 
-        public Task<IEnumerable<Supplier>> GetSuppliersAsync()
+        public async Task<IEnumerable<Supplier>> GetSuppliersAsync()
         {
-            return Task.Run<IEnumerable<Supplier>>(() =>
-            {
-                using (var context = this._billSplitterContextFactory())
-                {
-                    return context.Suppliers.ToList();
-                }
-            });
+            var context = this._billSplitterContext;
+            return await context.Suppliers.ToListAsync();
         }
 
         public async Task<int> UpdateSupplierAsync(Supplier supplier)
         {
-            using (var context = this._billSplitterContextFactory())
-            {
-                context.Suppliers.Update(supplier);
-                return await context.SaveChangesAsync();
-            }
+            var context = this._billSplitterContext;
+            context.Suppliers.Update(supplier);
+            return await context.SaveChangesAsync();
         }
 
         public async Task<Supplier> GetSupplierAsync(int id)
         {
-            using (var context = this._billSplitterContextFactory())
-            {
-                return await context.Suppliers.FindAsync(id);
-            }
+            var context = this._billSplitterContext;
+            return await context.Suppliers.FindAsync(id);
         }
 
         public async Task<int> AddPersonAsync(Person person)
         {
-            using (var context = this._billSplitterContextFactory())
-            {
-                await context.Persons.AddAsync(person);
-                return await context.SaveChangesAsync();
-            }
+            var context = this._billSplitterContext;
+            await context.Persons.AddAsync(person);
+            return await context.SaveChangesAsync();
         }
 
-        public Task<IEnumerable<Person>> GetPersonsAsync()
+        public async Task<IEnumerable<Person>> GetPersonsAsync()
         {
-            return Task.Run<IEnumerable<Person>>(() =>
-            {
-                using (var context = this._billSplitterContextFactory())
-                {
-                    return context.Persons.ToList();
-                }
-            });
+            var context = this._billSplitterContext;
+            return await context.Persons.ToListAsync();
         }
 
         public async Task<Person> GetPersonAsync(int id)
         {
-            using (var context = this._billSplitterContextFactory())
-            {
-                return await context.Persons.FindAsync(id);
-            }
+            var context = this._billSplitterContext;
+            return await context.Persons.FindAsync(id);
         }
+
         public async Task<int> UpdatePersonAsync(Person person)
         {
-            using (var context = this._billSplitterContextFactory())
-            {
-                context.Persons.Update(person);
-                return await context.SaveChangesAsync();
-            }
+            var context = this._billSplitterContext;
+            context.Persons.Update(person);
+            return await context.SaveChangesAsync();
+        }
+
+        public void Dispose()
+        {
+            this._billSplitterContext.Dispose();
         }
     }
 }

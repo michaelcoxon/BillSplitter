@@ -2,6 +2,7 @@
 import { RouteComponentProps } from 'react-router';
 import { BillCollection, Supplier, Person } from '../models/models';
 import { BillCollectionEditorComponent } from '../components/BillCollectionEditorComponent';
+import { Strings } from '@michaelcoxon/utilities';
 
 
 interface BillCollectionsEditState extends BillCollection
@@ -11,6 +12,7 @@ interface BillCollectionsEditState extends BillCollection
     personsLoading: boolean;
     suppliers: Supplier[];
     suppliersLoading: boolean;
+    submitError?: string;
 }
 
 export class BillCollectionsEdit extends React.Component<RouteComponentProps<{ id: number }>, BillCollectionsEditState>
@@ -22,7 +24,7 @@ export class BillCollectionsEdit extends React.Component<RouteComponentProps<{ i
         this.state = {
             billCollectionId: props.match.params.id,
             bills: [],
-            date: new Date(),
+            date: new Date().toJSON(),
             loading: true,
             persons: [],
             personsLoading: true,
@@ -55,7 +57,7 @@ export class BillCollectionsEdit extends React.Component<RouteComponentProps<{ i
 
     public render(): JSX.Element
     {
-        const { billCollectionId, bills, date, loading, persons, personsLoading, suppliers, suppliersLoading} = this.state;
+        const { billCollectionId, bills, date, loading, persons, personsLoading, suppliers, suppliersLoading, submitError } = this.state;
 
         return (
             <div>
@@ -65,7 +67,14 @@ export class BillCollectionsEdit extends React.Component<RouteComponentProps<{ i
                         <span>Loading...</span>
                         :
                         <div>
-                            <h1>Edit - {name}</h1>
+                            <h1>Edit - {new Date(date).toDateString()}</h1>
+                            {
+                                !Strings.isNullOrEmpty(submitError)
+                                    ?
+                                    <div className="alert alert-danger">{submitError}</div>
+                                    :
+                                    null
+                            }
                             <BillCollectionEditorComponent
                                 billCollection={{
                                     billCollectionId: billCollectionId,
@@ -95,6 +104,19 @@ export class BillCollectionsEdit extends React.Component<RouteComponentProps<{ i
                 body: JSON.stringify(billCollection)
             });
 
-        window.location.assign('/billcollections');
+        if (response.ok)
+        {
+            window.location.assign('/billcollections');
+        }
+        else
+        {
+            if (response.body !== null)
+            {
+                this.setState({ submitError: await response.text() });
+            } else
+            {
+                this.setState({ submitError: response.statusText });
+            }
+        }
     }
 }

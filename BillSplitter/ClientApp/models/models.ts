@@ -6,28 +6,30 @@ export interface Person
 {
     personId: number;
     name?: string;
+    splits?: Split[];
 }
 
 export interface BillCollection
 {
     billCollectionId: number;
-    date: Date;
+    date: string;
     bills: Bill[];
 }
 
 export interface Bill
 {
     billId: number;
+    billCollectionId: number;
+    personId?: number;
+    supplierId?: number;
     totalAmount?: number;
-    supplier?: Supplier
-    paidBy?: Person
-    splitWith?: Split[];
+    splits?: Split[];
 }
 
 export interface Split
 {
-    bill: Bill;
-    person?: Person;
+    billId: number;
+    personId: number;
     splitPercent?: number;
     splitAmount?: number;
 }

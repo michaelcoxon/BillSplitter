@@ -1,7 +1,7 @@
 ﻿import * as React from 'react';
 import { BillCollection, Supplier, Person, Bill } from "../models/models";
 import { BillEditorTableRowComponent } from './BillEditorTableRowComponent';
-
+import { Guid } from '@michaelcoxon/utilities';
 
 interface BillCollectionEditorComponentProps
 {
@@ -11,7 +11,24 @@ interface BillCollectionEditorComponentProps
     persons: Person[];
 }
 
-interface BillCollectionEditorComponentState extends BillCollection { }
+interface BillCollectionEditorComponentState
+{
+    billCollectionId: number;
+    date: string;
+    bills: ItemWithKey<Bill>[];
+}
+
+class ItemWithKey<T>
+{
+    readonly key: string;
+    item: T;
+
+    constructor(item: T)
+    {
+        this.item = item;
+        this.key = Guid.newGuid().toString();
+    }
+}
 
 export class BillCollectionEditorComponent extends React.Component<BillCollectionEditorComponentProps, BillCollectionEditorComponentState>
 {
@@ -22,7 +39,7 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
         this.state = {
             billCollectionId: props.billCollection.billCollectionId,
             date: props.billCollection.date,
-            bills: props.billCollection.bills,
+            bills: props.billCollection.bills.map(b => new ItemWithKey(b)),
         };
     }
 
@@ -39,8 +56,8 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                         className="form-control"
                         id="date"
                         placeholder="Date"
-                        value={this._getISODate(billCollection.date)}
-                        onChange={(ev) => this.setState({ date: new Date(ev.target.value) })}
+                        value={this._getISODate(new Date(billCollection.date))}
+                        onChange={(ev) => this.setState({ date: new Date(ev.target.value).toJSON() })}
                     />
                 </div>
                 <div className="form-group">
@@ -54,6 +71,7 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                     <table className="table">
                         <thead>
                             <tr>
+                                <th>&nbsp;</th>
                                 <th>Supplier</th>
                                 <th>Total amount</th>
                                 <th>Paid by</th>
@@ -65,11 +83,23 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                                 billCollection.bills.length > 0
                                     ?
                                     billCollection.bills.map((bill, index) => <BillEditorTableRowComponent
-                                        key={index}
-                                        bill={bill}
+                                        key={bill.key}
+                                        index={index}
+                                        bill={bill.item}
                                         persons={this.props.persons}
                                         suppliers={this.props.suppliers}
-                                        onChange={b => this.setState(s => { s.bills[index] = b })}
+                                        onChange={(i, b) =>
+                                        {
+                                            const { bills } = this.state;
+                                            bills[i].item = Object.assign(bills[i].item, b);
+                                            this.setState({ bills: bills })
+                                        }}
+                                        onRemove={index =>
+                                        {
+                                            const { bills } = this.state;
+                                            bills.splice(index, 1);
+                                            this.setState({ bills: bills });
+                                        }}
                                     />)
                                     :
                                     <tr>
@@ -80,7 +110,8 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                         <tfoot>
                             <tr>
                                 <td>Total</td>
-                                <td className="text-right">{`$${billCollection.bills.reduce<number>((p, c) => p + (c.totalAmount || 0), 0).toFixed(2)}`}</td>
+                                <th>&nbsp;</th>
+                                <td className="text-right">{`$${billCollection.bills.reduce<number>((p, c) => p + (c.item.totalAmount || 0), 0).toFixed(2)}`}</td>
                                 <td>&nbsp;</td>
                                 <td>&nbsp;</td>
                             </tr>
@@ -100,9 +131,12 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
 
     private _addBill()
     {
-        const { bills } = this.state;
+        const { bills, billCollectionId } = this.state;
 
-        bills.push({ billId: 0 });
+        bills.push(new ItemWithKey({
+            billId: 0,
+            billCollectionId: billCollectionId
+        }));
 
         this.setState({
             bills: bills
@@ -114,7 +148,7 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
         const billCollection: BillCollection = {
             billCollectionId: this.state.billCollectionId,
             date: this.state.date,
-            bills: this.state.bills
+            bills: this.state.bills.map(b => b.item)
         }
 
         this.props.onSave(billCollection);

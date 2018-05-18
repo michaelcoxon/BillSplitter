@@ -2,6 +2,7 @@
 import { RouteComponentProps } from 'react-router';
 import { BillCollection, Person, Supplier } from '../models/models';
 import { BillCollectionEditorComponent } from '../components/BillCollectionEditorComponent';
+import { Strings } from '@michaelcoxon/utilities';
 
 interface BillCollectionsCreateState
 {
@@ -9,6 +10,7 @@ interface BillCollectionsCreateState
     personsLoading: boolean;
     suppliers: Supplier[];
     suppliersLoading: boolean;
+    submitError?: string;
 }
 
 
@@ -47,6 +49,13 @@ export class BillCollectionsCreate extends React.Component<RouteComponentProps<{
             <div>
                 <h1>Create bill collection</h1>
                 {
+                    !Strings.isNullOrEmpty(this.state.submitError)
+                        ?
+                        <div className="alert alert-danger">{this.state.submitError}</div>
+                        :
+                        null
+                }
+                {
                     this.state.personsLoading && this.state.suppliersLoading
                         ?
                         <span>Loading...</span>
@@ -54,7 +63,7 @@ export class BillCollectionsCreate extends React.Component<RouteComponentProps<{
                         <BillCollectionEditorComponent
                             billCollection={({
                                 billCollectionId: 0,
-                                date: new Date(),
+                                date: new Date().toJSON(),
                                 bills: [],
                             })}
                             onSave={async (s) => await this._saveBillCollection(s)}
@@ -78,6 +87,19 @@ export class BillCollectionsCreate extends React.Component<RouteComponentProps<{
                 body: JSON.stringify(billCollection)
             });
 
-        window.location.assign('/billcollections');
+        if (response.ok)
+        {
+            window.location.assign('/billcollections');
+        }
+        else
+        {
+            if (response.body !== null)
+            {
+                this.setState({ submitError: await response.text() });
+            } else
+            {
+                this.setState({ submitError: response.statusText });
+            }
+        }
     }
 }

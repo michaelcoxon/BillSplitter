@@ -21,7 +21,8 @@ export class BillCollectionTableComponent extends React.Component<BillCollection
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Actions</th>
+                            <th className="td-shrink">Amount</th>
+                            <th className="td-shrink">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -32,15 +33,14 @@ export class BillCollectionTableComponent extends React.Component<BillCollection
                                 {
                                     return (
                                         <tr key={s.billCollectionId}>
-                                            <td>{s.date.toLocaleDateString()}</td>
+                                            <td>{new Date(s.date).toDateString()}</td>
+                                            <td className="text-right">${s.bills.reduce((p, c) => p + (c.totalAmount || 0), 0).toFixed(2)}</td>
                                             <td>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-link btn-sm"
+                                                <a
                                                     onClick={() => this._editBillCollection(s.billCollectionId)}
                                                 >
                                                     Edit...
-                                            </button>
+                                            </a>
                                             </td>
                                         </tr>
                                     );

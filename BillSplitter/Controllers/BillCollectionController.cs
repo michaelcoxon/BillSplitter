@@ -1,6 +1,7 @@
 ﻿using BillSplitter.Models;
 using BillSplitter.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,11 +13,16 @@ namespace BillSplitter.Controllers
     [Route("api/[controller]")]
     public class BillCollectionController : Controller
     {
-        private readonly BillService _billService;
+        private readonly IBillService _billService;
 
-        public BillCollectionController()
+        public BillCollectionController(IBillService billService)
         {
-            this._billService = new BillService(() => new BillSplitterContext());
+            this._billService = billService;
+        }
+
+        public override BadRequestResult BadRequest()
+        {
+            return base.BadRequest();
         }
 
         [HttpGet("")]
@@ -34,24 +40,10 @@ namespace BillSplitter.Controllers
         [HttpPost("")]
         public async Task<ActionResult> SaveAsync([FromBody] BillCollection billCollection)
         {
-            var result = await this._billService.AddBillCollectionAsync(billCollection);
-            if (result == 1)
+            try
             {
-                return this.Ok();
-            }
-            else
-            {
-                return this.BadRequest("No change was made");
-            }
-        }
-
-        [HttpPost("{id}")]
-        public async Task<ActionResult> SaveAsync(int id, [FromBody] BillCollection billCollection)
-        {
-            if (id == billCollection.BillCollectionId)
-            {
-                var result = await this._billService.UpdateBillCollectionAsync(billCollection);
-                if (result == 1)
+                var result = await this._billService.AddBillCollectionAsync(billCollection);
+                if (result > 1)
                 {
                     return this.Ok();
                 }
@@ -60,10 +52,40 @@ namespace BillSplitter.Controllers
                     return this.BadRequest("No change was made");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                return this.BadRequest("Bad id");
+                return this.BadRequest(ex.Message);
             }
+        }
+
+        [HttpPost("{id}")]
+        public async Task<ActionResult> SaveAsync(int id, [FromBody] BillCollection billCollection)
+        {
+            try
+            {
+
+                if (id == billCollection.BillCollectionId)
+                {
+                    var result = await this._billService.UpdateBillCollectionAsync(billCollection);
+                    if (result > 1)
+                    {
+                        return this.Ok();
+                    }
+                    else
+                    {
+                        return this.BadRequest("No change was made");
+                    }
+                }
+                else
+                {
+                    return this.BadRequest("Bad id");
+                }
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(ex.Message);
+            }
+
         }
     }
 }
