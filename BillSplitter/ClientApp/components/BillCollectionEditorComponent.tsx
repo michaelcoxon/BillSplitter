@@ -119,7 +119,7 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                                     {(() =>
                                     {
                                         const total = BillHelpers.computeTotal(...billCollection.bills.map(ib => ib.item));
-                                        let splitAmount = BillHelpers.getSplitAmount(total, billCollection.bills.map(ib => ib.item));
+                                        let splitAmount = BillHelpers.getSplitAmount(billCollection.bills.map(ib => ib.item));
 
 
                                         return total - splitAmount == 0

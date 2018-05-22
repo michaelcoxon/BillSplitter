@@ -60,7 +60,6 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                         <input
                             type="number"
                             className="form-control text-right"
-                            step={0.01}
                             defaultValue={this.state.totalAmount !== undefined ? this.state.totalAmount.toFixed(2) : undefined}
                             onBlur={(ev) => ev.target.value = (this.state.totalAmount || 0).toFixed(2)}
                             onChange={(ev) =>
@@ -148,7 +147,7 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                                     <input
                                         type="checkbox"
                                         value={p.personId}
-                                        checked={this.state.splits.some(pp => pp.personId == p.personId)}
+                                        defaultChecked={this.state.splits.some(pp => pp.personId == p.personId)}
                                         onChange={(ev) =>
                                         {
                                             const { splits } = this.state;
@@ -160,11 +159,13 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                                             }
                                             else if (existingIndex == -1 && ev.target.checked)
                                             {
+                                                const isAmount = this.state.splits.some(pp => pp.splitAmount !== undefined && pp.splitAmount !== null);
+
                                                 splits.push({
                                                     billId: this.state.billId,
                                                     personId: p.personId,
-                                                    splitPercent: (1 / persons.length) * 100,
-                                                    splitAmount: undefined,
+                                                    splitPercent: isAmount ? undefined : (1 / persons.length) * 100,
+                                                    splitAmount: isAmount ? (this.state.totalAmount || 0) - this.state.splits.reduce((p, c) => p + (c.splitAmount || 0), 0) : undefined,
                                                 })
                                             }
                                             else
@@ -203,9 +204,7 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                                                         const value = parseFloat(ev.target.value);
                                                         const { splits } = this.state;
 
-                                                        const split = this.state.splits.find(pp => pp.personId == p.personId);
-
-                                                        if (split !== undefined)
+                                                        for (let split of this.state.splits)
                                                         {
                                                             if (ev.target.checked)
                                                             {
@@ -241,7 +240,6 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                                                 <input
                                                     type="number"
                                                     className="form-control text-right"
-                                                    step={0.01}
                                                     value={
                                                         (() =>
                                                         {

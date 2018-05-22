@@ -18,7 +18,7 @@ export namespace BillHelpers
         return bills.reduce((p, c) => p + (c.totalAmount || 0), 0);
     }
 
-    export function getSplitAmount(total: number, bills: Bill[]): number
+    export function getSplitAmount(bills: Bill[]): number
     {
         let amount = 0;
 
@@ -26,18 +26,23 @@ export namespace BillHelpers
         {
             for (var split of (bill.splits || []))
             {
-                if (split.splitAmount !== undefined && split.splitAmount !== null)
-                {
-                    amount += split.splitAmount;
-                }
-                else
-                {
-                    amount += total * ((split.splitPercent || 0) / 100);
-                }
+                amount += getSingleSplitAmount(bill, split);
             }
         }
 
         return amount;
+    }
+
+    export function getSingleSplitAmount(bill: Bill, split: Split): number
+    {
+        if (split.splitAmount !== undefined && split.splitAmount !== null)
+        {
+            return split.splitAmount;
+        }
+        else
+        {
+            return (bill.totalAmount || 0) * ((split.splitPercent || 0) / 100);
+        }
     }
 
     export function getSplitLabelForSplit(persons: Person[], split: Split): string
