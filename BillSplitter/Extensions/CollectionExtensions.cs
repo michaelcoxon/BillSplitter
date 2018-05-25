@@ -100,10 +100,9 @@ namespace BillSplitter
             // adds
             if (newIds.Any())
             {
-                foreach (var id in newIds)
+                foreach (var sourceItemToAdd in sourceCollection.Where(i => newIds.Any(id => sourceKeySelector(i).Equals(id))))
                 {
-                    var sourceItemToAdd = sourceCollection.Single(i => sourceKeySelector(i).Equals(id));
-                    destinationCollection.Add(newItemActivator(sourceItemToAdd, id));
+                    destinationCollection.Add(newItemActivator(sourceItemToAdd, sourceKeySelector(sourceItemToAdd)));
                 }
             }
 
