@@ -9,9 +9,16 @@ interface HomeState
     persons: Person[];
     payments: Payment[];
     billCollections: BillCollection[];
+    list: TableRow[];
 }
 
-type TableRow = { receiverId: number, senderId: number, amount: number };
+type TableRow = {
+    receiverId: number,
+    senderId: number,
+    amount: number,
+    children: TableRow[],
+    showChildren?: boolean,
+};
 
 export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
 
@@ -24,6 +31,7 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
             persons: [],
             payments: [],
             billCollections: [],
+            list: []
         };
     }
 
@@ -40,18 +48,13 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
             persons: persons,
             payments: payments,
             billCollections: billCollections,
+            list: Home._buildList(persons, payments, billCollections),
         });
     }
 
     public render()
     {
-        const { loading, persons, payments, billCollections } = this.state;
-        let list: TableRow[] = []
-
-        if (!loading)
-        {
-            list = this._buildList();
-        }
+        const { loading, persons, payments, billCollections, list } = this.state;
 
         return (
             <div>
@@ -75,14 +78,49 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
                                     {
                                         list.length > 0
                                             ?
-                                            list.map(i =>
-                                                (
+                                            list.map((item, index) =>
+                                                [
                                                     <tr>
-                                                        <td>{persons.find(p => p.personId == i.senderId)!.name}</td>
-                                                        <td>{persons.find(p => p.personId == i.receiverId)!.name}</td>
-                                                        <td className="text-right">${i.amount.toFixed(2)}</td>
-                                                    </tr>
-                                                )
+                                                        <td>
+                                                            {persons.find(p => p.personId == item.senderId)!.name}
+
+                                                            {
+                                                                item.children.length > 0
+                                                                    ?
+                                                                    <a
+                                                                        className="pull-right small"
+                                                                        onClick={() =>
+                                                                        {
+                                                                            const { list } = this.state;
+
+                                                                            list[index].showChildren = !list[index].showChildren;
+                                                                            this.setState({ list: list })
+                                                                        }}
+                                                                        children={item.showChildren?"close details":"show details"}
+                                                                    />
+                                                                    :
+                                                                    null
+                                                            }
+                                                        </td>
+                                                        <td>{persons.find(p => p.personId == item.receiverId)!.name}</td>
+                                                        <td className="text-right">${item.amount.toFixed(2)}</td>
+                                                    </tr>,
+
+                                                    item.showChildren
+                                                        ?
+                                                        item.children.map(child =>
+                                                            (
+                                                                <tr>
+                                                                    <td className="small">{persons.find(p => p.personId == child.senderId)!.name}</td>
+                                                                    <td className="small">{persons.find(p => p.personId == child.receiverId)!.name}</td>
+                                                                    <td className="text-right small">${child.amount.toFixed(2)}</td>
+                                                                </tr>
+                                                            )
+                                                        )
+                                                        :
+                                                        null
+
+                                                ]
                                             )
                                             :
                                             (
@@ -101,20 +139,20 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
         );
     }
 
-    private _buildList(): TableRow[]
+    private static _buildList(persons: Person[], payments: Payment[], billCollections: BillCollection[]): TableRow[]
     {
         // { payeeId: number, payerId: number, amount: number }
         const result: TableRow[] = [];
 
-        for (let receiver of this.state.persons)
+        for (let receiver of persons)
         {
-            for (let sender of this.state.persons.filter(p => p.personId !== receiver.personId))
+            for (let sender of persons.filter(p => p.personId !== receiver.personId))
             {
-                const receivedTotal: number = this.state.payments
+                const receivedTotal: number = payments
                     .filter(p => p.receiverPersonId == receiver.personId && p.senderPersonId == sender.personId)
                     .reduce((p, c) => p + c.amount, 0);
 
-                const owedTotal: number = this.state.billCollections
+                const owedTotal: number = billCollections
                     .reduce<Bill[]>((b, bc) => [...b, ...bc.bills], [])
                     .filter(b => b.personId == receiver.personId && b.splits !== undefined && b.splits.some(s => s.personId == sender.personId))
                     .reduce((p, b) =>
@@ -128,7 +166,8 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
                 const newItem: TableRow = {
                     receiverId: receiver.personId,
                     senderId: sender.personId,
-                    amount: actualOwed
+                    amount: actualOwed,
+                    children: []
                 };
 
                 if (newItem.amount > 0)
@@ -139,9 +178,9 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
         }
 
         // for each person
-        for (let person1 of this.state.persons)
+        for (let person1 of persons)
         {
-            for (let person2 of this.state.persons.filter(p => p.personId !== person1.personId))
+            for (let person2 of persons.filter(p => p.personId !== person1.personId))
             {
                 // find where they owe each other
                 const person1IsOwedByPerson2_index = result.findIndex(r => r.receiverId == person1.personId && r.senderId == person2.personId);
@@ -156,22 +195,49 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
                     if (person1IsOwedByPerson2.amount > person2IsOwedByPerson1.amount)
                     {
                         // subtract p1's debt from what p2 owes them and remove p1's debt
+                        const previous: TableRow = {
+                            amount: person1IsOwedByPerson2.amount,
+                            receiverId: person1IsOwedByPerson2.receiverId,
+                            senderId: person1IsOwedByPerson2.senderId,
+                            children: []
+                        }
                         person1IsOwedByPerson2.amount = person1IsOwedByPerson2.amount - person2IsOwedByPerson1.amount;
-                        result.splice(person2IsOwedByPerson1_index, 1);
+
+                        result[person1IsOwedByPerson2_index].children.push(...[
+                            previous,
+                            ...result.splice(person2IsOwedByPerson1_index, 1)
+                        ]);
                     }
                     // if p1 owes p2 more than p2 owes p1
                     else if (person1IsOwedByPerson2.amount < person2IsOwedByPerson1.amount)
                     {
                         // subtract p2's debt from what p1 owes them and remove p2's debt
+                        const previous: TableRow = {
+                            amount: person2IsOwedByPerson1.amount,
+                            receiverId: person2IsOwedByPerson1.receiverId,
+                            senderId: person2IsOwedByPerson1.senderId,
+                            children: []
+                        }
+
                         person2IsOwedByPerson1.amount = person2IsOwedByPerson1.amount - person1IsOwedByPerson2.amount;
-                        result.splice(person1IsOwedByPerson2_index, 1);
+                        result[person2IsOwedByPerson1_index].children.push(...[
+                            previous,
+                            ...result.splice(person1IsOwedByPerson2_index, 1)
+                        ]);
                     }
                     // if they owe each other the same
                     else
                     {
                         //remove both
-                        result.splice(person2IsOwedByPerson1_index, 1);
-                        result.splice(person1IsOwedByPerson2_index, 1);
+                        result.push({
+                            receiverId: person1.personId,
+                            senderId: person2.personId,
+                            amount: 0,
+                            children: [
+                                ...result.splice(person2IsOwedByPerson1_index, 1),
+                                ...result.splice(person1IsOwedByPerson2_index, 1)
+                            ]
+                        });
                     }
                 }
             }
