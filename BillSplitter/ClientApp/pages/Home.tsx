@@ -69,6 +69,7 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
                             <table className="table">
                                 <thead>
                                     <tr>
+                                        <th className="td-shrink"></th>
                                         <th>Sender</th>
                                         <th>Receiver</th>
                                         <th className="td-shrink">Amount</th>
@@ -82,13 +83,11 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
                                                 [
                                                     <tr>
                                                         <td>
-                                                            {persons.find(p => p.personId == item.senderId)!.name}
-
                                                             {
                                                                 item.children.length > 0
                                                                     ?
                                                                     <a
-                                                                        className="pull-right small"
+                                                                        className="pull-right btn btn-xs btn-default"
                                                                         onClick={() =>
                                                                         {
                                                                             const { list } = this.state;
@@ -96,12 +95,20 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
                                                                             list[index].showChildren = !list[index].showChildren;
                                                                             this.setState({ list: list })
                                                                         }}
-                                                                        children={item.showChildren?"close details":"show details"}
-                                                                    />
+                                                                    >
+                                                                        {
+                                                                            item.showChildren
+                                                                                ?
+                                                                                <i className="glyphicon glyphicon-menu-up" />
+                                                                                :
+                                                                                <i className="glyphicon glyphicon-menu-down" />
+                                                                        }
+                                                                    </a>
                                                                     :
                                                                     null
                                                             }
                                                         </td>
+                                                        <td>{persons.find(p => p.personId == item.senderId)!.name}</td>
                                                         <td>{persons.find(p => p.personId == item.receiverId)!.name}</td>
                                                         <td className="text-right">${item.amount.toFixed(2)}</td>
                                                     </tr>,
@@ -110,10 +117,11 @@ export class Home extends React.Component<RouteComponentProps<{}>, HomeState> {
                                                         ?
                                                         item.children.map(child =>
                                                             (
-                                                                <tr>
-                                                                    <td className="small">{persons.find(p => p.personId == child.senderId)!.name}</td>
-                                                                    <td className="small">{persons.find(p => p.personId == child.receiverId)!.name}</td>
-                                                                    <td className="text-right small">${child.amount.toFixed(2)}</td>
+                                                                <tr className="small">
+                                                                    <td></td>
+                                                                    <td>{persons.find(p => p.personId == child.senderId)!.name}</td>
+                                                                    <td>{persons.find(p => p.personId == child.receiverId)!.name}</td>
+                                                                    <td className="text-right">${child.amount.toFixed(2)}</td>
                                                                 </tr>
                                                             )
                                                         )
