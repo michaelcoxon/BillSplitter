@@ -6,7 +6,7 @@
     "publish-ubuntu": "dotnet publish -c Release --runtime ubuntu-x64"
   },
   "devDependencies": {
-    "@michaelcoxon/ensure": "^1.0.1",
+    "@michaelcoxon/ensure": "^1.0.2",
     "@michaelcoxon/utilities": "^1.5.4",
     "@michaelcoxon/collections": "^1.2.2",
     "@types/history": "^4.6.2",
@@ -20,6 +20,13 @@
     "aspnet-webpack": "^2.0.3",
     "aspnet-webpack-react": "^3.0.0",
     "awesome-typescript-loader": "^3.5.0",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.4",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
     "bootstrap": "^3.3.7",
     "css-loader": "^0.28.11",
     "event-source-polyfill": "^0.0.9",
@@ -34,6 +41,7 @@
     "react-router-dom": "^4.2.2",
     "style-loader": "^0.18.2",
     "typescript": "^2.9.1",
+    "tslib": "^1.9.1",
     "url-loader": "^0.5.9",
     "webpack": "^2.5.1",
     "webpack-hot-middleware": "^2.22.2"
