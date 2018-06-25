@@ -1,28 +1,34 @@
 ﻿import * as React from 'react';
+import { Queryable } from '@michaelcoxon/collections'
+import { BillCollection, Person, Supplier, Bill, Expenditure } from "../models/models";
 
-import { BillCollection, Person, Supplier, Bill } from "../models/models";
-
-type TableRow = {
-    supplierId: number,
-    avgPerVisit: number,
-    avgPerMonth: number,
-    total: number,
-};
 
 interface ExpenditureComponentProps
 {
     persons: Person[];
     suppliers: Supplier[];
-    billCollections: BillCollection[];
+    expenditures: Expenditure[];
+}
+
+interface TableRow
+{
+    showChildren: boolean;
+    supplierId: number;
+    avgPerVisit: number;
+    avgPerMonth: number;
+    totalSpend: number;
+    children: {
+        personId: number;
+        avgPerVisit: number;
+        avgPerMonth: number;
+        totalSpend: number;
+    }[]
 }
 
 interface ExpenditureComponentState
 {
-    loading: boolean;
     list: TableRow[];
 }
-
-
 
 export class ExpenditureComponent extends React.Component<ExpenditureComponentProps, ExpenditureComponentState>
 {
@@ -31,111 +37,124 @@ export class ExpenditureComponent extends React.Component<ExpenditureComponentPr
         super(props);
 
         this.state = {
-            list: [],
-            loading: true,
+            list: this._buildList()
         };
     }
-
-    componentWillMount()
-    {
-        const { persons, suppliers, billCollections } = this.props;
-
-        this.setState({
-            loading: false,
-            list: ExpenditureComponent._buildList(persons, suppliers, billCollections),
-        });
-    }
-
     render()
     {
-        const { billCollections, persons, suppliers } = this.props;
-        const { loading, list } = this.state;
+        const { persons, suppliers } = this.props;
+        const { list } = this.state;
 
         return (
-            !loading
-                ?
-                <div className="panel panel-default">
-                    <div className="panel-heading">
-                        <h4>Expenditures</h4>
-                    </div>
-                    <table className="table">
-                        <thead>
-                            <tr className="no-wrap">
-                                <th className="td-shrink"></th>
-                                <th>Supplier</th>
-                                <th className="td-shrink">Ave/visit</th>
-                                <th className="td-shrink">Ave/month</th>
-                                <th className="td-shrink">Total spend</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {list.length > 0
-                                ?
-                                list.map(item => (
-                                    <tr>
-                                        <td></td>
+            <div className="panel panel-default">
+                <div className="panel-heading">
+                    <h4>Expenditures</h4>
+                </div>
+                <table className="table">
+                    <thead>
+                        <tr className="no-wrap">
+                            <th className="td-shrink"></th>
+                            <th>Supplier</th>
+                            <th className="td-shrink">Ave/visit</th>
+                            <th className="td-shrink">Ave/month</th>
+                            <th className="td-shrink">Total spend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {list.length > 0
+                            ?
+                            list.map((item, index) => (
+                                [
+                                    < tr >
+                                        <td>
+                                            {
+                                                item.children.length > 0
+                                                    ?
+                                                    <a
+                                                        className="pull-right btn btn-xs btn-default"
+                                                        onClick={() =>
+                                                        {
+                                                            const { list } = this.state;
+
+                                                            list[index].showChildren = !list[index].showChildren;
+                                                            this.setState({ list: list })
+                                                        }}
+                                                    >
+                                                        {
+                                                            item.showChildren
+                                                                ?
+                                                                <i className="glyphicon glyphicon-menu-up" />
+                                                                :
+                                                                <i className="glyphicon glyphicon-menu-down" />
+                                                        }
+                                                    </a>
+                                                    :
+                                                    null
+                                            }
+                                        </td>
                                         <td>{suppliers.find(s => s.supplierId == item.supplierId)!.name}</td>
                                         <td className="text-right">${item.avgPerVisit.toFixed(2)}</td>
                                         <td className="text-right">${item.avgPerMonth.toFixed(2)}</td>
-                                        <td className="text-right">${item.total.toFixed(2)}</td>
-                                    </tr>
-                                ))
-                                :
-                                (
-                                    <tr>
-                                        <td></td>
-                                        <td colSpan={4}>No items</td>
-                                    </tr>
-                                )
-                            }
-                        </tbody>
-                    </table>
-                </div>
-                :
-                <div>Loading...</div>
+                                        <td className="text-right">${item.totalSpend.toFixed(2)}</td>
+                                    </tr>,
+                                    item.showChildren
+                                        ?
+                                        item.children.map(child =>
+                                            (
+                                                <tr className="small">
+                                                    <td></td>
+                                                    <td>{persons.find(s => s.personId == child.personId)!.name}</td>
+                                                    <td className="text-right">${child.avgPerVisit.toFixed(2)}</td>
+                                                    <td className="text-right">${child.avgPerMonth.toFixed(2)}</td>
+                                                    <td className="text-right">${child.totalSpend.toFixed(2)}</td>
+                                                </tr>
+                                            )
+                                        )
+                                        :
+                                        null
+                                ]
+                            ))
+                            :
+                            (
+                                <tr>
+                                    <td></td>
+                                    <td colSpan={4}>No items</td>
+                                </tr>
+                            )
+                        }
+                    </tbody>
+                </table>
+            </div>
         );
     }
 
-    static _buildList(persons: Person[], suppliers: Supplier[], billCollections: BillCollection[]): TableRow[]
+    private _buildList(): TableRow[]
     {
+        const { persons, suppliers, expenditures } = this.props;
         const result: TableRow[] = [];
-        const sortedSuppliers = suppliers
-            .sort((a, b) => a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0)
-            .filter(s => billCollections.some(bc => bc.bills.some(b => b.supplierId == s.supplierId)));
+        const groupedExpenditures = new Queryable(expenditures)
+            .groupBy(e => e.supplierId)
+            .toArray();
 
-        for (const supplier of sortedSuppliers)
+
+        for (const gExp of groupedExpenditures)
         {
-            const total = billCollections
-                .reduce((total, bc) => bc.bills
-                    .filter(b => b.supplierId == supplier.supplierId)
-                    .reduce((p, b) => p + (b.totalAmount || 0), 0)
-                    , 0);
+            result.push({
+                showChildren: false,
+                supplierId: gExp.key,
+                avgPerVisit: gExp.groupedRows.sum(e => e.avgPerVisit),
+                avgPerMonth: gExp.groupedRows.sum(e => e.avgPerMonth),
+                totalSpend: gExp.groupedRows.sum(e => e.totalSpend),
+                children: gExp.groupedRows.select(e => ({
+                    personId: e.personId,
+                    avgPerVisit: e.avgPerVisit,
+                    avgPerMonth: e.avgPerMonth,
+                    totalSpend: e.totalSpend,
+                })).toArray()
+            });
 
-            const avgPerVisit = total / billCollections.reduce((p, bc) => p + bc.bills.filter(b => b.supplierId == supplier.supplierId).length, 0);
-
-            const totalPerMonth = billCollections
-                .reduce<Bill[][]>((rv, bc) =>
-                {
-                    (rv[new Date(bc.date).getMonth()] = rv[new Date(bc.date).getMonth()] || []).push(...bc.bills);
-                    return rv;
-                }, [])
-                .map(monthCollection => monthCollection
-                    .filter(b => b.supplierId == supplier.supplierId)
-                    .reduce((p, b) => p + (b.totalAmount || 0), 0));
-
-            const avgPerMonth = totalPerMonth.reduce((p, c) => p + c, 0) / totalPerMonth.length;
-
-            const row: TableRow = {
-                supplierId: supplier.supplierId,
-                total: total,
-                avgPerVisit: avgPerVisit,
-                avgPerMonth: avgPerMonth
-            };
-
-            result.push(row);
         }
 
         return result;
     }
-
 }
