@@ -23,6 +23,7 @@ export interface Bill
     personId?: number;
     supplierId?: number;
     totalAmount?: number;
+    billDate: string;
     splits?: Split[];
 }
 

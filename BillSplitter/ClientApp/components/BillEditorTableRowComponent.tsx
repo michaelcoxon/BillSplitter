@@ -2,6 +2,7 @@
 import { Supplier, Person, Bill, Split } from "../models/models";
 import { NotSupportedException } from '@michaelcoxon/utilities';
 import { BillHelpers } from '../helpers/ModelHelpers';
+import { getISODate } from '../utilities';
 
 
 interface BillEditorTableRowComponentProps
@@ -17,6 +18,7 @@ interface BillEditorTableRowComponentProps
 interface BillEditorTableRowComponentState
 {
     billId: number;
+    billDate: string;
     totalAmount?: number;
     supplierId?: number
     personId?: number
@@ -31,6 +33,7 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
 
         this.state = {
             billId: props.bill.billId,
+            billDate: props.bill.billDate,
             personId: props.bill.personId,
             splits: props.bill.splits !== undefined ? props.bill.splits : [],
             supplierId: props.bill.supplierId,
@@ -50,6 +53,20 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                     >
                         &times;
                     </button>
+                </td>
+                <td>
+                    <input
+                        type="date"
+                        className="form-control"
+                        id="date"
+                        placeholder="Date"
+                        defaultValue={getISODate(new Date(this.state.billDate))}
+                        onChange={(ev) =>
+                        {
+                            this.props.onChange(this.props.index, { billDate: new Date(ev.target.value).toJSON() });
+                            this.setState({ billDate: new Date(ev.target.value).toJSON() })
+                        }}
+                    />
                 </td>
                 <td>
                     {this._renderSupplierDropDown()}

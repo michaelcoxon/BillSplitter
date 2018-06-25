@@ -74,6 +74,7 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                         <thead>
                             <tr>
                                 <th>&nbsp;</th>
+                                <th>Date</th>
                                 <th>Supplier</th>
                                 <th>Total amount</th>
                                 <th>Paid by</th>
@@ -105,15 +106,15 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                                     />)
                                     :
                                     <tr>
-                                        <td colSpan={4}>No bills</td>
+                                        <td colSpan={6}>No bills</td>
                                     </tr>
                             }
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td>Total</td>
-                                <th>&nbsp;</th>
-                                <td className="text-right">{`$${BillHelpers.computeTotal(...billCollection.bills.map(ib=>ib.item)).toFixed(2)}`}</td>
+                                <td>&nbsp;</td>
+                                <td colSpan={2}>Total</td>
+                                <td className="text-right">{`$${BillHelpers.computeTotal(...billCollection.bills.map(ib => ib.item)).toFixed(2)}`}</td>
                                 <td>&nbsp;</td>
                                 <td className="text-right">
                                     {(() =>
@@ -154,7 +155,8 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
 
         bills.push(new ItemWithKey({
             billId: 0,
-            billCollectionId: billCollectionId
+            billCollectionId: billCollectionId,
+            billDate: new Date().toJSON()
         }));
 
         this.setState({
