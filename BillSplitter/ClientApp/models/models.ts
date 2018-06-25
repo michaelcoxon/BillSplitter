@@ -49,3 +49,12 @@ export interface Payment
     senderPersonId?: number;
     receiverPersonId?: number;
 }
+
+export interface Expenditure
+{
+    supplierId: number;
+    personId: number;
+    avgPerVisit: number;
+    avgPerMonth: number;
+    totalSpend: number;
+}

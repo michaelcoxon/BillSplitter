@@ -169,25 +169,32 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                                         {
                                             const { splits } = this.state;
 
-                                            var existingIndex = splits.findIndex(pp => pp.personId == p.personId);
+                                            const existingIndex = splits.findIndex(pp => pp.personId == p.personId);
+                                            const isAmount = this.state.splits.some(pp => pp.splitAmount !== undefined && pp.splitAmount !== null);
+
                                             if (existingIndex > -1 && !ev.target.checked)
                                             {
                                                 splits.splice(existingIndex, 1);
                                             }
                                             else if (existingIndex == -1 && ev.target.checked)
                                             {
-                                                const isAmount = this.state.splits.some(pp => pp.splitAmount !== undefined && pp.splitAmount !== null);
-
                                                 splits.push({
                                                     billId: this.state.billId,
                                                     personId: p.personId,
-                                                    splitPercent: isAmount ? undefined : (1 / persons.length) * 100,
                                                     splitAmount: isAmount ? (this.state.totalAmount || 0) - this.state.splits.reduce((p, c) => p + (c.splitAmount || 0), 0) : undefined,
                                                 })
                                             }
                                             else
                                             {
                                                 throw new NotSupportedException("wtf this is not supposed to happen");
+                                            }
+
+                                            if (!isAmount)
+                                            {
+                                                for (let split of splits)
+                                                {
+                                                    split.splitPercent = (1 / (splits.length)) * 100;
+                                                }
                                             }
 
                                             this.props.onChange(this.props.index, { splits: splits });
@@ -231,7 +238,7 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                                                             else
                                                             {
                                                                 split.splitAmount = undefined;
-                                                                split.splitPercent = (1 / persons.length) * 100;
+                                                                split.splitPercent = (1 / splits.length) * 100;
                                                             }
                                                         }
 
