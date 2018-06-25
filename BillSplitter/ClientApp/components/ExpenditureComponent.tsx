@@ -152,9 +152,8 @@ export class ExpenditureComponent extends React.Component<ExpenditureComponentPr
                     totalSpend: e.totalSpend,
                 })).toArray()
             });
-
         }
 
-        return result;
+        return new Queryable(result).orderByDescending(t => t.totalSpend).toArray();
     }
 }
