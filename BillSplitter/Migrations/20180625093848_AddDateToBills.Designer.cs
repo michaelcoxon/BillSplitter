@@ -11,9 +11,10 @@ using System;
 namespace BillSplitter.Migrations
 {
     [DbContext(typeof(BillSplitterContext))]
-    partial class BillSplitterContextModelSnapshot : ModelSnapshot
+    [Migration("20180625093848_AddDateToBills")]
+    partial class AddDateToBills
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

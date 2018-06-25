@@ -83,6 +83,8 @@ namespace BillSplitter.Models
 
         public int PersonId { get; set; }
 
+        public DateTime BillDate { get; set; }
+
         public List<Split> Splits { get; set; }
     }
 
