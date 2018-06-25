@@ -14,7 +14,7 @@ namespace BillSplitter.Controllers
     [Route("api/[controller]")]
     public class SetupController : Controller
     {
-        private DbContext _dbContext;
+        private readonly DbContext _dbContext;
 
         public SetupController(BillSplitterContext dbContext)
         {
