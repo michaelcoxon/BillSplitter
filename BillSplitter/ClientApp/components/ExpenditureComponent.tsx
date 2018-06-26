@@ -1,7 +1,10 @@
 ﻿import * as React from 'react';
 import { Queryable } from '@michaelcoxon/collections'
 import { BillCollection, Person, Supplier, Bill, Expenditure } from "../models/models";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import * as Color from 'color';
 
+const goldenRatio = 0.618033988749895;
 
 interface ExpenditureComponentProps
 {
@@ -44,11 +47,102 @@ export class ExpenditureComponent extends React.Component<ExpenditureComponentPr
     {
         const { persons, suppliers } = this.props;
         const { list } = this.state;
+        const gen = this._generateColor(157 / 360, 0.84, 0.58);
+        const COLORS = list.map(i => gen.next().value);
 
         return (
             <div className="panel panel-default">
                 <div className="panel-heading">
                     <h4>Expenditures</h4>
+                </div>
+                <div className="panel-body">
+                    <div className="row">
+                        <div className="col-sm-4" style={{ height: "33vh" }}>
+                            <ResponsiveContainer>
+                                <PieChart>
+                                    <Pie
+                                        data={list.map(i => ({
+                                            name: suppliers.find(s => s.supplierId == i.supplierId)!.name,
+                                            value: i.avgPerVisit
+                                        }))}
+                                        nameKey="name"
+                                        dataKey="value"
+                                        fill="#8884d8"
+                                        innerRadius={70}
+                                        outerRadius={100}
+                                        paddingAngle={3}
+                                    >
+                                        {
+                                            list.map((entry, index) => <Cell
+                                                fill={COLORS[index % COLORS.length]}
+                                            />)
+                                        }
+
+                                    </Pie>
+                                    <Tooltip
+                                        isAnimationActive={false}
+                                        formatter={(v) => <strong>${(v as number).toFixed(2)}</strong>}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="col-sm-4" style={{ height: "33vh" }}>
+                            <ResponsiveContainer>
+                                <PieChart>
+                                    <Pie
+                                        data={list.map(i => ({
+                                            name: suppliers.find(s => s.supplierId == i.supplierId)!.name,
+                                            value: i.avgPerMonth
+                                        }))}
+                                        nameKey="name"
+                                        dataKey="value"
+                                        fill="#8884d8"
+                                        innerRadius={70}
+                                        outerRadius={100}
+                                        paddingAngle={3}
+                                    >
+                                        {
+                                            list.map((entry, index) => <Cell
+                                                fill={COLORS[index % COLORS.length]}                                                
+                                            />)
+                                        }
+                                    </Pie>
+                                    <Tooltip
+                                        isAnimationActive={false}
+                                        formatter={(v) => <strong>${(v as number).toFixed(2)}</strong>}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="col-sm-4" style={{ height: "33vh" }}>
+                            <ResponsiveContainer>
+                                <PieChart>
+                                    <Pie
+                                        data={list.map(i => ({
+                                            name: suppliers.find(s => s.supplierId == i.supplierId)!.name,
+                                            value: i.totalSpend
+                                        }))}
+                                        nameKey="name"
+                                        dataKey="value"
+                                        fill="#8884d8"
+                                        innerRadius={70}
+                                        outerRadius={100}
+                                        paddingAngle={3}
+                                    >
+                                        {
+                                            list.map((entry, index) => <Cell
+                                                fill={COLORS[index % COLORS.length]}
+                                            />)
+                                        }
+                                    </Pie>
+                                    <Tooltip
+                                        isAnimationActive={false}
+                                        formatter={(v) => <strong>${(v as number).toFixed(2)}</strong>}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
                 </div>
                 <table className="table">
                     <thead>
@@ -123,6 +217,15 @@ export class ExpenditureComponent extends React.Component<ExpenditureComponentPr
                             )
                         }
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <th></th>
+                            <th>Total</th>
+                            <th className="text-right"></th>
+                            <th className="text-right">${list.reduce((p, c) => p + c.avgPerMonth, 0).toFixed(2)}</th>
+                            <th className="text-right">${list.reduce((p, c) => p + c.totalSpend, 0).toFixed(2)}</th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         );
@@ -155,5 +258,20 @@ export class ExpenditureComponent extends React.Component<ExpenditureComponentPr
         }
 
         return new Queryable(result).orderByDescending(t => t.totalSpend).toArray();
+    }
+
+    private * _generateColor(hue: number = Math.random(), saturation: number = 0.5, value: number = 0.95): Iterator<string>
+    {
+        while (true)
+        {
+            yield new Color({
+                h: hue * 360,
+                s: saturation * 100,
+                l: value * 100
+            }).hex();
+
+            hue += goldenRatio;
+            hue %= 1;
+        }
     }
 }
