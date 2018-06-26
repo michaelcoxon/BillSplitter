@@ -123,6 +123,15 @@ export class ExpenditureComponent extends React.Component<ExpenditureComponentPr
                             )
                         }
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <th></th>
+                            <th>Total</th>
+                            <th className="text-right"></th>
+                            <th className="text-right">${list.reduce((p, c) => p + c.avgPerMonth, 0).toFixed(2)}</th>
+                            <th className="text-right">${list.reduce((p, c) => p + c.totalSpend, 0).toFixed(2)}</th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         );
