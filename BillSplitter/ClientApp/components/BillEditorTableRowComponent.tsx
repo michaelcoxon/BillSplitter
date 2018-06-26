@@ -1,6 +1,6 @@
 ﻿import * as React from 'react';
 import { Supplier, Person, Bill, Split } from "../models/models";
-import { NotSupportedException } from '@michaelcoxon/utilities';
+import { NotSupportedException, Strings } from '@michaelcoxon/utilities';
 import { BillHelpers } from '../helpers/ModelHelpers';
 import { getISODate } from '../utilities';
 
@@ -23,6 +23,7 @@ interface BillEditorTableRowComponentState
     supplierId?: number
     personId?: number
     splits: Split[];
+    comment?: string;
 }
 
 export class BillEditorTableRowComponent extends React.Component<BillEditorTableRowComponentProps, BillEditorTableRowComponentState>
@@ -38,6 +39,7 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
             splits: props.bill.splits !== undefined ? props.bill.splits : [],
             supplierId: props.bill.supplierId,
             totalAmount: props.bill.totalAmount,
+            comment: props.bill.comment,
         };
     }
 
@@ -94,8 +96,27 @@ export class BillEditorTableRowComponent extends React.Component<BillEditorTable
                 <td>
                     {this._renderSplitWithDropDown()}
                 </td>
+                <td>
+                    <button type="button" className={`btn btn-default ${Strings.isNullOrEmpty(this.state.comment || null) ? '' : 'has-comment'}`} onClick={() => this._setComment()}>
+                        <span className="glyphicon glyphicon-comment"></span>
+                    </button>
+                </td>
             </tr>
         )
+    }
+
+    private _setComment(): void
+    {
+        let { comment } = this.state;
+        comment = Strings.trim(prompt("Item comment", comment || undefined) || Strings.empty);
+
+        if (Strings.isNullOrEmpty(comment))
+        {
+            comment = undefined;
+        }
+
+        this.props.onChange(this.props.index, { comment });
+        this.setState({ comment });
     }
 
     private _renderSupplierDropDown()

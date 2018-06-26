@@ -73,12 +73,13 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                     <table className="table">
                         <thead>
                             <tr>
-                                <th>&nbsp;</th>
+                                <th className="td-shrink">&nbsp;</th>
                                 <th>Date</th>
                                 <th>Supplier</th>
                                 <th>Total amount</th>
                                 <th>Paid by</th>
                                 <th>Split with</th>
+                                <th className="td-shrink"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -119,8 +120,8 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                                 <td className="text-right">
                                     {(() =>
                                     {
-                                        const total = BillHelpers.computeTotal(...billCollection.bills.map(ib => ib.item));
-                                        let splitAmount = BillHelpers.getSplitAmount(billCollection.bills.map(ib => ib.item));
+                                        const total = parseFloat(BillHelpers.computeTotal(...billCollection.bills.map(ib => ib.item)).toFixed(2));
+                                        let splitAmount = parseFloat(BillHelpers.getSplitAmount(billCollection.bills.map(ib => ib.item)).toFixed(2));
 
 
                                         return total - splitAmount == 0
@@ -134,6 +135,7 @@ export class BillCollectionEditorComponent extends React.Component<BillCollectio
                                             </span>
                                     })()}
                                 </td>
+                                <td>&nbsp;</td>
                             </tr>
                         </tfoot>
                     </table>

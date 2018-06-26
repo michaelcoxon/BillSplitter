@@ -85,6 +85,8 @@ namespace BillSplitter.Models
 
         public DateTime BillDate { get; set; }
 
+        public string Comment { get; set; }
+
         public List<Split> Splits { get; set; }
     }
 

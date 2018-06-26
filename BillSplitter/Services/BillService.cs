@@ -39,6 +39,7 @@ namespace BillSplitter.Services
                     SupplierId = bill.SupplierId,
                     TotalAmount = bill.TotalAmount,
                     BillDate = bill.BillDate,
+                    Comment = bill.Comment,
 
                     Splits = new List<Split>(bill.Splits.Select(split => new Split
                     {
@@ -89,6 +90,7 @@ namespace BillSplitter.Services
                     dest.SupplierId = src.SupplierId;
                     dest.TotalAmount = src.TotalAmount;
                     dest.BillDate = src.BillDate;
+                    dest.Comment = src.Comment;
 
                     dest.Splits.Update(
                         src.Splits,

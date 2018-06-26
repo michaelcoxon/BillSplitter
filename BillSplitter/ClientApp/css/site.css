@@ -32,7 +32,24 @@ a {
 }
 
 .no-wrap {
-  white-space:nowrap;
+  white-space: nowrap;
+}
+
+.has-comment {
+  position: relative;
+}
+
+.has-comment:before {
+  border: 5px solid red;
+  border-radius: 100%;
+  width: 0px;
+  height: 0px;
+  background: red;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  content: "";
+  z-index: 1;
 }
 
 @media (max-width: 767px) {

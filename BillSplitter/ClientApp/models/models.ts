@@ -25,6 +25,7 @@ export interface Bill
     totalAmount?: number;
     billDate: string;
     splits?: Split[];
+    comment?: string;
 }
 
 export interface Split
